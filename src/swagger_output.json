@@ -1,0 +1,122 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "version": "v1.0.0",
+    "title": "LCDWallet API Documentation",
+    "description": "Documentation for the LCDWallet API"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000",
+      "description": "Development server"
+    }
+  ],
+  "paths": {
+    "/": {
+      "get": {
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/wallet/create": {
+      "post": {
+        "tags": [
+          "Wallet"
+        ],
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WalletResponseSuccess"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/WalletResponseSuccess"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WalletResponseError"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/WalletResponseError"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "description": "Password for encrypting the keystore file",
+          "type": "object",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PasswordRequest"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "PasswordRequest": {
+        "type": "object",
+        "properties": {
+          "password": {
+            "type": "string",
+            "example": "string"
+          }
+        },
+        "xml": {
+          "name": "PasswordRequest"
+        }
+      },
+      "WalletResponseSuccess": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "string"
+          },
+          "downloadUrl": {
+            "type": "string",
+            "example": "string"
+          }
+        },
+        "xml": {
+          "name": "WalletResponseSuccess"
+        }
+      },
+      "WalletResponseError": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string",
+            "example": "string"
+          }
+        },
+        "xml": {
+          "name": "WalletResponseError"
+        }
+      }
+    }
+  }
+}
