@@ -3,6 +3,6 @@ import { createWallet } from "../controllers/wallet.controller";
 
 const router = express.Router();
 
-router.post("/create", createWallet);
+router.post("/create/keystore", createWallet);
 
 export default router;

@@ -11,7 +11,7 @@ const createWallet = async (
   /*  
       #swagger.auto = false
       #swagger.tags = ['Wallet']
-      #swagger.path = '/wallet/create'
+      #swagger.path = '/wallet/create/keystore'
       #swagger.method = 'post'
       #swagger.produces = ['application/json']
       #swagger.consumes = ['application/json']

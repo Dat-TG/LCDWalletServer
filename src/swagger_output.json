@@ -22,7 +22,7 @@
         }
       }
     },
-    "/wallet/create": {
+    "/wallet/create/keystore": {
       "post": {
         "tags": [
           "Wallet"
