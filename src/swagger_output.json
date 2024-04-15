@@ -73,6 +73,58 @@
           }
         }
       }
+    },
+    "/wallet/access/keystore": {
+      "post": {
+        "tags": [
+          "Wallet"
+        ],
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccessWalletResponseSuccess"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccessWalletResponseSuccess"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccessWalletResponseError"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccessWalletResponseError"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "description": "Password for encrypting the keystore file",
+          "type": "object",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AccessKeystoreRequest"
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -115,6 +167,58 @@
         },
         "xml": {
           "name": "WalletResponseError"
+        }
+      },
+      "AccessKeystoreRequest": {
+        "type": "object",
+        "properties": {
+          "iv": {
+            "type": "string",
+            "example": "string"
+          },
+          "salt": {
+            "type": "string",
+            "example": "string"
+          },
+          "encryptedData": {
+            "type": "string",
+            "example": "string"
+          },
+          "password": {
+            "type": "string",
+            "example": "string"
+          }
+        },
+        "xml": {
+          "name": "AccessKeystoreRequest"
+        }
+      },
+      "AccessWalletResponseSuccess": {
+        "type": "object",
+        "properties": {
+          "privateKey": {
+            "type": "string",
+            "example": "string"
+          },
+          "publicKey": {
+            "type": "string",
+            "example": "string"
+          }
+        },
+        "xml": {
+          "name": "AccessWalletResponseSuccess"
+        }
+      },
+      "AccessWalletResponseError": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string",
+            "example": "string"
+          }
+        },
+        "xml": {
+          "name": "AccessWalletResponseError"
         }
       }
     }

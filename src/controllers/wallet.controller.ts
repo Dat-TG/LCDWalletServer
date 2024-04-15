@@ -3,7 +3,7 @@ import { ec as EC } from "elliptic";
 import crypto from "crypto";
 import fs from "fs";
 import { deriveKeyFromPassword } from "../utils/helper";
-const createWallet = async (
+const createWalletKeystore = async (
   req: Request,
   res: Response,
   next: NextFunction
@@ -67,7 +67,7 @@ const createWallet = async (
       privateKey: privateKey,
     };
 
-    console.log("Keystore created:", keystore);
+    // console.log("Keystore created:", keystore);
 
     // Serialize the keystore object to JSON
     const keystoreJson = JSON.stringify(keystore);
@@ -83,13 +83,16 @@ const createWallet = async (
     const cipher = crypto.createCipheriv("aes-256-cbc", key, iv);
     let encryptedKeystore = cipher.update(keystoreJson, "utf8", "hex");
     encryptedKeystore += cipher.final("hex");
-    console.log("Keystore encrypted:", encryptedKeystore);
+    console.log("Keystore:", keystoreJson);
+    console.log("Salt:", salt.toString("hex"));
+    console.log("IV:", iv.toString("hex"));
 
     // Write the encrypted keystore data to a file
     fs.writeFileSync(
       filename,
       JSON.stringify({
         iv: iv.toString("hex"),
+        salt: salt.toString("hex"),
         encryptedData: encryptedKeystore,
       })
     );
@@ -115,4 +118,89 @@ const createWallet = async (
   }
 };
 
-export { createWallet };
+const accessWalletKeystore = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  /*  
+      #swagger.auto = false
+      #swagger.tags = ['Wallet']
+      #swagger.path = '/wallet/access/keystore'
+      #swagger.method = 'post'
+      #swagger.produces = ['application/json']
+      #swagger.consumes = ['application/json']
+  
+      #swagger.requestBody = {
+            required: true,
+            description: 'Password for encrypting the keystore file',
+            type: 'object',
+            content: {
+                "application/json": {
+                    schema: {
+                        $ref: "#/components/schemas/AccessKeystoreRequest"
+                    }  
+                }
+            }
+        } 
+  
+      #swagger.responses[200] = {
+          description: 'OK',
+          schema: {
+              $ref: "#/components/schemas/AccessWalletResponseSuccess"
+          }
+      }
+      #swagger.responses[400] = {
+          description: 'Bad Request',
+          schema: {
+              $ref: "#/components/schemas/AccessWalletResponseError"
+          }
+      }
+  */
+  try {
+    // Extract IV, encryptedData, salt, and password from request body
+    const { iv, encryptedData, salt, password } = req.body;
+
+    // Validate required fields
+    if (!iv || !encryptedData || !salt || !password) {
+      return res
+        .status(400)
+        .json({ error: "IV, encryptedData, salt, and password are required" });
+    }
+
+    // Decode IV, salt, and encryptedData from base64
+    const decodedIV = Buffer.from(iv, "hex");
+    const decodedSalt = Buffer.from(salt, "hex");
+    const decodedEncryptedData = Buffer.from(encryptedData, "hex");
+    console.log("Decoded IV:", decodedIV.toString("hex"));
+    console.log("Decoded Salt:", decodedSalt.toString("hex"));
+    console.log(
+      "Decoded Encrypted Data:",
+      decodedEncryptedData.toString("hex")
+    );
+
+    // Derive key from password and salt
+    const key = deriveKeyFromPassword(password, decodedSalt, 32); // Use 32 bytes (256 bits) key length
+
+    // Decrypt the keystore using the provided key and IV
+    const decipher = crypto.createDecipheriv("aes-256-cbc", key, decodedIV);
+    let decryptedData = decipher.update(decodedEncryptedData);
+    decryptedData = Buffer.concat([decryptedData, decipher.final()]);
+
+    // Parse decrypted data as JSON
+    const decryptedKeystore = JSON.parse(decryptedData.toString("utf8"));
+
+    // Extract private and public keys from decrypted keystore
+    const privateKey = decryptedKeystore.privateKey;
+    const publicKey = decryptedKeystore.address;
+
+    // Use the private and public keys as needed
+    // For example, you can return them in the response
+    res.json({ privateKey, publicKey });
+  } catch (error: any) {
+    console.error("Error accessing wallet by keystore:", error);
+    res.status(400).json({ error: `An error occurred: ${error.message}` });
+  }
+};
+
+export { createWalletKeystore, accessWalletKeystore };

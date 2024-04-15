@@ -24,6 +24,19 @@ const doc = {
       WalletResponseError: {
         error: "string",
       },
+      AccessKeystoreRequest: {
+        iv: "string",
+        salt: "string",
+        encryptedData: "string",
+        password: "string",
+      },
+      AccessWalletResponseSuccess: {
+        privateKey: "string",
+        publicKey: "string",
+      },
+      AccessWalletResponseError: {
+        error: "string",
+      },
     },
   },
 };

@@ -1,8 +1,12 @@
 import express from "express";
-import { createWallet } from "../controllers/wallet.controller";
+import {
+  accessWalletKeystore,
+  createWalletKeystore,
+} from "../controllers/wallet.controller";
 
 const router = express.Router();
 
-router.post("/create/keystore", createWallet);
+router.post("/create/keystore", createWalletKeystore);
+router.post("/access/keystore", accessWalletKeystore);
 
 export default router;
