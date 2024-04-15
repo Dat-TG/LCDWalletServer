@@ -7,6 +7,7 @@ const loggerMiddleware = async (
 ) => {
   console.log("-------------------------");
   console.log(`${request.method} ${request.path}`);
+  console.log(`Request URL: ${request.originalUrl}`);
   console.log(`Request body: ${JSON.stringify(request.body)}`);
   console.log(`Request query: ${JSON.stringify(request.query)}`);
   console.log(`Request params: ${JSON.stringify(request.params)}`);
