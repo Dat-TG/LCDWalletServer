@@ -199,7 +199,9 @@ const accessWalletKeystore = async (
     res.json({ privateKey, publicKey });
   } catch (error: any) {
     console.error("Error accessing wallet by keystore:", error);
-    res.status(400).json({ error: `An error occurred: ${error.message}` });
+    res
+      .status(400)
+      .json({ error: "Key derivation failed - possibly wrong passphrase" });
   }
 };
 
