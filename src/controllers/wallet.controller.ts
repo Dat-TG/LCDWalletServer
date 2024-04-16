@@ -244,4 +244,88 @@ const generateMnemonicPhrase = async (
   }
 };
 
-export { createWalletKeystore, accessWalletKeystore, generateMnemonicPhrase };
+const generateQuestion = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    /*  
+      #swagger.auto = false
+      #swagger.tags = ['Wallet']
+      #swagger.path = '/wallet/generate/mnemonic'
+      #swagger.method = 'get'
+      #swagger.produces = ['application/json']
+
+      #swagger.parameters['word'] = {
+          in: 'query',
+          description: 'The given word.',
+          required: true,
+          type: 'string'
+      }
+
+      #swagger.responses[200] = {
+          description: 'OK',
+          schema: {
+              type: 'object',
+              properties: {
+                  question: {
+                      type: 'array',
+                      items: {
+                          type: 'string'
+                      }
+                  }
+              }
+          }
+      }
+
+      #swagger.responses[400] = {
+          description: 'Bad Request',
+          schema: {
+              type: 'object',
+              properties: {
+                  name: {
+                      type: 'string'
+                  },
+                  error: {
+                      type: 'string'
+                  }
+              }
+          }
+      }
+  */
+
+    const givenWord = req.query.word as string;
+    const randomWords: string[] = [];
+    while (randomWords.length < 2) {
+      const word =
+        bip39.wordlists.english[
+          Math.floor(Math.random() * bip39.wordlists.english.length)
+        ];
+      if (!randomWords.includes(word)) {
+        randomWords.push(word);
+      }
+    }
+    randomWords.push(givenWord);
+    // Shuffle the randomWords array
+    // Fisher-Yates shuffle algorithm
+    for (let i = randomWords.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [randomWords[i], randomWords[j]] = [randomWords[j], randomWords[i]];
+    }
+    res.json({ question: randomWords });
+  } catch (error: any) {
+    console.error("Error generating question:", error);
+    res.status(400).json({
+      name: "QuestionResponseError",
+      error: `An error occurred while generating the question: ${error.message}`,
+    });
+  }
+};
+
+export {
+  createWalletKeystore,
+  accessWalletKeystore,
+  generateMnemonicPhrase,
+  generateQuestion,
+};
