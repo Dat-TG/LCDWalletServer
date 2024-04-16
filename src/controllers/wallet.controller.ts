@@ -3,6 +3,7 @@ import { ec as EC } from "elliptic";
 import crypto from "crypto";
 import fs from "fs";
 import { deriveKeyFromPassword } from "../utils/helper";
+import * as bip39 from "bip39";
 const createWalletKeystore = async (
   req: Request,
   res: Response,
@@ -205,4 +206,42 @@ const accessWalletKeystore = async (
   }
 };
 
-export { createWalletKeystore, accessWalletKeystore };
+const generateMnemonicPhrase = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  /*  
+      #swagger.auto = false
+      #swagger.tags = ['Wallet']
+      #swagger.path = '/wallet/generate/mnemonic'
+      #swagger.method = 'get'
+      #swagger.produces = ['application/json']
+  
+      #swagger.responses[200] = {
+          description: 'OK',
+          schema: {
+              $ref: "#/components/schemas/MnemonicResponseSuccess"
+          }
+      }
+      #swagger.responses[400] = {
+          description: 'Bad Request',
+          schema: {
+              $ref: "#/components/schemas/MnemonicResponseError"
+          }
+      }
+  */
+  try {
+    // Generate a random mnemonic phrase (12 words)
+    const mnemonic = bip39.generateMnemonic();
+    res.json({ mnemonic });
+  } catch (error: any) {
+    console.error("Error generating mnemonic phrase:", error);
+    res.status(400).json({
+      name: "MnemonicResponseError",
+      error: `An error occurred while generating the mnemonic phrase: ${error.message}`,
+    });
+  }
+};
+
+export { createWalletKeystore, accessWalletKeystore, generateMnemonicPhrase };

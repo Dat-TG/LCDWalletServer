@@ -37,6 +37,13 @@ const doc = {
       AccessWalletResponseError: {
         error: "string",
       },
+      MnemonicResponseSuccess: {
+        mnemonic: "string",
+      },
+      MnemonicResponseError: {
+        name: "string",
+        error: "string",
+      },
     },
   },
 };

@@ -125,6 +125,46 @@
           }
         }
       }
+    },
+    "/wallet/generate/mnemonic": {
+      "get": {
+        "tags": [
+          "Wallet"
+        ],
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MnemonicResponseSuccess"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/MnemonicResponseSuccess"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MnemonicResponseError"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/MnemonicResponseError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -219,6 +259,34 @@
         },
         "xml": {
           "name": "AccessWalletResponseError"
+        }
+      },
+      "MnemonicResponseSuccess": {
+        "type": "object",
+        "properties": {
+          "mnemonic": {
+            "type": "string",
+            "example": "string"
+          }
+        },
+        "xml": {
+          "name": "MnemonicResponseSuccess"
+        }
+      },
+      "MnemonicResponseError": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "string"
+          },
+          "error": {
+            "type": "string",
+            "example": "string"
+          }
+        },
+        "xml": {
+          "name": "MnemonicResponseError"
         }
       }
     }
