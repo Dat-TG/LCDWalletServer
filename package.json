@@ -16,7 +16,6 @@
   "license": "ISC",
   "dependencies": {
     "@types/swagger-ui-express": "^4.1.6",
-    "bip32": "^4.0.0",
     "bip39": "^3.1.0",
     "concurrently": "^8.2.2",
     "cors": "^2.8.5",
@@ -26,8 +25,7 @@
     "nodemon": "^3.1.0",
     "rimraf": "^5.0.5",
     "swagger-autogen": "^2.23.7",
-    "swagger-ui-express": "^5.0.0",
-    "tiny-secp256k1": "^2.2.3"
+    "swagger-ui-express": "^5.0.0"
   },
   "devDependencies": {
     "@types/cors": "^2.8.17",

@@ -272,6 +272,62 @@
           }
         }
       }
+    },
+    "/wallet/access/privatekey": {
+      "post": {
+        "tags": [
+          "Wallet"
+        ],
+        "summary": "Access wallet using private key",
+        "description": "Generate public key for a wallet using a private key.",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccessPrivateKeyResponseSuccess"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccessPrivateKeyResponseSuccess"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccessPrivateKeyResponseError"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccessPrivateKeyResponseError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "description": "Private key in hexadecimal format",
+          "type": "object",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AccessPrivateKeyRequestBody"
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -465,6 +521,42 @@
         },
         "xml": {
           "name": "AccessMnemonicResponseError"
+        }
+      },
+      "AccessPrivateKeyRequestBody": {
+        "type": "object",
+        "properties": {
+          "privateKey": {
+            "type": "string",
+            "example": "string"
+          }
+        },
+        "xml": {
+          "name": "AccessPrivateKeyRequestBody"
+        }
+      },
+      "AccessPrivateKeyResponseSuccess": {
+        "type": "object",
+        "properties": {
+          "publicKey": {
+            "type": "string",
+            "example": "string"
+          }
+        },
+        "xml": {
+          "name": "AccessPrivateKeyResponseSuccess"
+        }
+      },
+      "AccessPrivateKeyResponseError": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string",
+            "example": "string"
+          }
+        },
+        "xml": {
+          "name": "AccessPrivateKeyResponseError"
         }
       }
     }

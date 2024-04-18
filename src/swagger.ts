@@ -60,6 +60,15 @@ const doc = {
       AccessMnemonicResponseError: {
         error: "string",
       },
+      AccessPrivateKeyRequestBody: {
+        privateKey: "string",
+      },
+      AccessPrivateKeyResponseSuccess: {
+        publicKey: "string",
+      },
+      AccessPrivateKeyResponseError: {
+        error: "string",
+      },
     },
   },
 };

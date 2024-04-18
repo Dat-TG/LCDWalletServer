@@ -4,10 +4,7 @@ import crypto from "crypto";
 import fs from "fs";
 import { deriveKeyFromPassword } from "../utils/helper";
 import * as bip39 from "bip39";
-import * as ecc from "tiny-secp256k1";
-import { BIP32Factory } from "bip32";
-// You must wrap a tiny-secp256k1 compatible implementation
-const bip32 = BIP32Factory(ecc);
+const ec = new EC("secp256k1");
 const createWalletKeystore = async (
   req: Request,
   res: Response,
@@ -59,7 +56,6 @@ const createWalletKeystore = async (
     }
 
     // Create a new elliptic curve key pair
-    const ec = new EC("secp256k1");
     const keyPair = ec.genKeyPair();
 
     // Get the private key and public key in hexadecimal format
@@ -349,33 +345,93 @@ const accessWalletMnemonic = (
 */
 
   try {
-    // Mnemonic phrase (12 words)
+    // Retrieve the mnemonic phrase from the request body
     const { mnemonic } = req.body;
 
-    // Validate mnemonic phrase
+    // Validate the mnemonic phrase
     if (!bip39.validateMnemonic(mnemonic)) {
       return res.status(400).json({ error: "Invalid mnemonic phrase" });
     }
 
-    // Derive a BIP32 HD wallet seed from the mnemonic
-    const seed = bip39.mnemonicToSeedSync(mnemonic);
+    // Derive a seed buffer from the mnemonic phrase
+    const seedBuffer = bip39.mnemonicToSeedSync(mnemonic);
 
-    // Derive the master extended key (xprv) from the seed
-    const masterNode = bip32.fromSeed(seed);
-
-    // Derive the child private key from the master node
-    const childNode = masterNode.derivePath("m/44'/60'/0'/0/0");
+    // Derive a key pair from the seed buffer
+    const keyPair = ec.keyFromPrivate(seedBuffer.subarray(0, 32));
 
     // Get the private key in hexadecimal format
-    const privateKey = childNode.privateKey?.toString("hex");
+    const privateKeyHex = keyPair.getPrivate("hex");
 
-    // Get the public key in hexadecimal format
-    const publicKey = childNode.publicKey.toString("hex");
+    // Get the public key in uncompressed format
+    const publicKeyHex = keyPair.getPublic("hex");
 
-    // Return the mnemonic phrase, private key, and public key
-    res.json({ privateKey, publicKey });
+    // Return the generated private key and public key
+    res.json({ privateKey: privateKeyHex, publicKey: publicKeyHex });
   } catch (error: any) {
     console.error("Error creating wallet from mnemonic:", error);
+    res
+      .status(500)
+      .json({ error: "An error occurred while creating the wallet" });
+  }
+};
+
+const accessWalletPrivateKey = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  /*  
+  #swagger.tags = ['Wallet']
+  #swagger.path = '/wallet/access/privatekey'
+  #swagger.method = 'post'
+  #swagger.summary = 'Access wallet using private key'
+  #swagger.description = 'Generate public key for a wallet using a private key.'
+  #swagger.requestBody = {
+            required: true,
+            description: 'Private key in hexadecimal format',
+            type: 'object',
+            content: {
+                "application/json": {
+                    schema: {
+                        $ref: "#/components/schemas/AccessPrivateKeyRequestBody"
+                    }  
+                }
+            }
+        } 
+  #swagger.responses[200] = {
+    description: 'OK',
+    schema: {
+      $ref: "#/definitions/AccessPrivateKeyResponseSuccess"
+    }
+  }
+  #swagger.responses[400] = {
+    description: 'Bad Request',
+    schema: {
+      $ref: "#/definitions/AccessPrivateKeyResponseError"
+    }
+  }
+*/
+
+  try {
+    // Private key in hexadecimal format
+    const { privateKey } = req.body;
+
+    // Validate private key
+    if (!privateKey || typeof privateKey !== "string") {
+      return res.status(400).json({ error: "Invalid private key" });
+    }
+
+    // Create a new elliptic curve key pair from the private key
+    const ec = new EC("secp256k1");
+    const keyPair = ec.keyFromPrivate(privateKey);
+
+    // Get the public key in hexadecimal format
+    const publicKey = keyPair.getPublic("hex");
+
+    // Return the public key
+    res.json({ publicKey });
+  } catch (error: any) {
+    console.error("Error creating wallet from private key:", error);
     res
       .status(500)
       .json({ error: "An error occurred while creating the wallet" });
@@ -388,4 +444,5 @@ export {
   generateMnemonicPhrase,
   generateQuestion,
   accessWalletMnemonic,
+  accessWalletPrivateKey,
 };

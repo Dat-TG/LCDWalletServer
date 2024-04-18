@@ -2,6 +2,7 @@ import express from "express";
 import {
   accessWalletKeystore,
   accessWalletMnemonic,
+  accessWalletPrivateKey,
   createWalletKeystore,
   generateMnemonicPhrase,
   generateQuestion,
@@ -14,5 +15,6 @@ router.post("/access/keystore", accessWalletKeystore);
 router.get("/generate/mnemonic", generateMnemonicPhrase);
 router.get("/generate/question", generateQuestion);
 router.post("/access/mnemonic", accessWalletMnemonic);
+router.post("/access/privatekey", accessWalletPrivateKey);
 
 export default router;
