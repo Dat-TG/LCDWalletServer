@@ -44,6 +44,22 @@ const doc = {
         name: "string",
         error: "string",
       },
+      QuestionResponseSuccess: {
+        question: ["option1", "option2", "option3"],
+      },
+      QuestionResponseError: {
+        error: "string",
+      },
+      AccessMnemonicRequestBody: {
+        mnemonic: "string",
+      },
+      AccessMnemonicResponseSuccess: {
+        privateKey: "string",
+        publicKey: "string",
+      },
+      AccessMnemonicResponseError: {
+        error: "string",
+      },
     },
   },
 };

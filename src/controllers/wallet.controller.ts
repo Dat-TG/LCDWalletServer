@@ -4,6 +4,10 @@ import crypto from "crypto";
 import fs from "fs";
 import { deriveKeyFromPassword } from "../utils/helper";
 import * as bip39 from "bip39";
+import * as ecc from "tiny-secp256k1";
+import { BIP32Factory } from "bip32";
+// You must wrap a tiny-secp256k1 compatible implementation
+const bip32 = BIP32Factory(ecc);
 const createWalletKeystore = async (
   req: Request,
   res: Response,
@@ -267,30 +271,14 @@ const generateQuestion = async (
       #swagger.responses[200] = {
           description: 'OK',
           schema: {
-              type: 'object',
-              properties: {
-                  question: {
-                      type: 'array',
-                      items: {
-                          type: 'string'
-                      }
-                  }
-              }
+              $ref: "#/components/schemas/QuestionResponseSuccess"
           }
       }
 
       #swagger.responses[400] = {
           description: 'Bad Request',
           schema: {
-              type: 'object',
-              properties: {
-                  name: {
-                      type: 'string'
-                  },
-                  error: {
-                      type: 'string'
-                  }
-              }
+              $ref: "#/components/schemas/QuestionResponseError"
           }
       }
   */
@@ -323,9 +311,81 @@ const generateQuestion = async (
   }
 };
 
+const accessWalletMnemonic = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  /*  
+  #swagger.tags = ['Wallet']
+  #swagger.path = '/wallet/access/mnemonic'
+  #swagger.method = 'post'
+  #swagger.summary = 'Access wallet using mnemonic phrase'
+  #swagger.description = 'Generate private and public keys for a wallet using a mnemonic phrase.'
+  #swagger.requestBody = {
+            required: true,
+            description: 'Mnemonic phrases (12 words)',
+            type: 'object',
+            content: {
+                "application/json": {
+                    schema: {
+                        $ref: "#/components/schemas/AccessMnemonicRequestBody"
+                    }  
+                }
+            }
+        } 
+  #swagger.responses[200] = {
+    description: 'OK',
+    schema: {
+      $ref: "#/definitions/AccessMnemonicResponseSuccess"
+    }
+  }
+  #swagger.responses[400] = {
+    description: 'Bad Request',
+    schema: {
+      $ref: "#/definitions/AccessMnemonicResponseError"
+    }
+  }
+*/
+
+  try {
+    // Mnemonic phrase (12 words)
+    const { mnemonic } = req.body;
+
+    // Validate mnemonic phrase
+    if (!bip39.validateMnemonic(mnemonic)) {
+      return res.status(400).json({ error: "Invalid mnemonic phrase" });
+    }
+
+    // Derive a BIP32 HD wallet seed from the mnemonic
+    const seed = bip39.mnemonicToSeedSync(mnemonic);
+
+    // Derive the master extended key (xprv) from the seed
+    const masterNode = bip32.fromSeed(seed);
+
+    // Derive the child private key from the master node
+    const childNode = masterNode.derivePath("m/44'/60'/0'/0/0");
+
+    // Get the private key in hexadecimal format
+    const privateKey = childNode.privateKey?.toString("hex");
+
+    // Get the public key in hexadecimal format
+    const publicKey = childNode.publicKey.toString("hex");
+
+    // Return the mnemonic phrase, private key, and public key
+    res.json({ privateKey, publicKey });
+  } catch (error: any) {
+    console.error("Error creating wallet from mnemonic:", error);
+    res
+      .status(500)
+      .json({ error: "An error occurred while creating the wallet" });
+  }
+};
+
 export {
   createWalletKeystore,
   accessWalletKeystore,
   generateMnemonicPhrase,
   generateQuestion,
+  accessWalletMnemonic,
 };

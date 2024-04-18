@@ -189,76 +189,12 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "type": {
-                      "type": "string",
-                      "example": "object"
-                    },
-                    "properties": {
-                      "type": "object",
-                      "properties": {
-                        "question": {
-                          "type": "object",
-                          "properties": {
-                            "type": {
-                              "type": "string",
-                              "example": "array"
-                            },
-                            "items": {
-                              "type": "object",
-                              "properties": {
-                                "type": {
-                                  "type": "string",
-                                  "example": "string"
-                                }
-                              }
-                            }
-                          }
-                        }
-                      }
-                    }
-                  },
-                  "xml": {
-                    "name": "main"
-                  }
+                  "$ref": "#/components/schemas/QuestionResponseSuccess"
                 }
               },
               "application/xml": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "type": {
-                      "type": "string",
-                      "example": "object"
-                    },
-                    "properties": {
-                      "type": "object",
-                      "properties": {
-                        "question": {
-                          "type": "object",
-                          "properties": {
-                            "type": {
-                              "type": "string",
-                              "example": "array"
-                            },
-                            "items": {
-                              "type": "object",
-                              "properties": {
-                                "type": {
-                                  "type": "string",
-                                  "example": "string"
-                                }
-                              }
-                            }
-                          }
-                        }
-                      }
-                    }
-                  },
-                  "xml": {
-                    "name": "main"
-                  }
+                  "$ref": "#/components/schemas/QuestionResponseSuccess"
                 }
               }
             }
@@ -268,77 +204,69 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "type": {
-                      "type": "string",
-                      "example": "object"
-                    },
-                    "properties": {
-                      "type": "object",
-                      "properties": {
-                        "name": {
-                          "type": "object",
-                          "properties": {
-                            "type": {
-                              "type": "string",
-                              "example": "string"
-                            }
-                          }
-                        },
-                        "error": {
-                          "type": "object",
-                          "properties": {
-                            "type": {
-                              "type": "string",
-                              "example": "string"
-                            }
-                          }
-                        }
-                      }
-                    }
-                  },
-                  "xml": {
-                    "name": "main"
-                  }
+                  "$ref": "#/components/schemas/QuestionResponseError"
                 }
               },
               "application/xml": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "type": {
-                      "type": "string",
-                      "example": "object"
-                    },
-                    "properties": {
-                      "type": "object",
-                      "properties": {
-                        "name": {
-                          "type": "object",
-                          "properties": {
-                            "type": {
-                              "type": "string",
-                              "example": "string"
-                            }
-                          }
-                        },
-                        "error": {
-                          "type": "object",
-                          "properties": {
-                            "type": {
-                              "type": "string",
-                              "example": "string"
-                            }
-                          }
-                        }
-                      }
-                    }
-                  },
-                  "xml": {
-                    "name": "main"
-                  }
+                  "$ref": "#/components/schemas/QuestionResponseError"
                 }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/wallet/access/mnemonic": {
+      "post": {
+        "tags": [
+          "Wallet"
+        ],
+        "summary": "Access wallet using mnemonic phrase",
+        "description": "Generate private and public keys for a wallet using a mnemonic phrase.",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccessMnemonicResponseSuccess"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccessMnemonicResponseSuccess"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccessMnemonicResponseError"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccessMnemonicResponseError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "description": "Mnemonic phrases (12 words)",
+          "type": "object",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AccessMnemonicRequestBody"
               }
             }
           }
@@ -466,6 +394,77 @@
         },
         "xml": {
           "name": "MnemonicResponseError"
+        }
+      },
+      "QuestionResponseSuccess": {
+        "type": "object",
+        "properties": {
+          "question": {
+            "type": "array",
+            "example": [
+              "option1",
+              "option2",
+              "option3"
+            ],
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "xml": {
+          "name": "QuestionResponseSuccess"
+        }
+      },
+      "QuestionResponseError": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string",
+            "example": "string"
+          }
+        },
+        "xml": {
+          "name": "QuestionResponseError"
+        }
+      },
+      "AccessMnemonicRequestBody": {
+        "type": "object",
+        "properties": {
+          "mnemonic": {
+            "type": "string",
+            "example": "string"
+          }
+        },
+        "xml": {
+          "name": "AccessMnemonicRequestBody"
+        }
+      },
+      "AccessMnemonicResponseSuccess": {
+        "type": "object",
+        "properties": {
+          "privateKey": {
+            "type": "string",
+            "example": "string"
+          },
+          "publicKey": {
+            "type": "string",
+            "example": "string"
+          }
+        },
+        "xml": {
+          "name": "AccessMnemonicResponseSuccess"
+        }
+      },
+      "AccessMnemonicResponseError": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string",
+            "example": "string"
+          }
+        },
+        "xml": {
+          "name": "AccessMnemonicResponseError"
         }
       }
     }
