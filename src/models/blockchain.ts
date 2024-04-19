@@ -117,6 +117,34 @@ class BlockChain {
       throw new Error("Error while adding block to chain");
     }
   }
+
+  isValidChain(chain: Block[]): boolean {
+    if (JSON.stringify(chain[0]) !== JSON.stringify(genesisBlock)) {
+      return false;
+    }
+    let tempBlocks = [chain[0]];
+    for (let i = 1; i < chain.length; i++) {
+      if (this.isValidNewBlock(chain[i], tempBlocks[i - 1])) {
+        tempBlocks.push(chain[i]);
+      } else {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  replaceChain(newChain: Block[]): boolean {
+    if (this.isValidChain(newChain) && newChain.length > this.blocks.length) {
+      console.log(
+        "Received blockchain is valid. Replacing current blockchain with received blockchain"
+      );
+      this.blocks = newChain;
+      return true;
+    } else {
+      console.log("Received blockchain is invalid");
+      return false;
+    }
+  }
 }
 
 export default new BlockChain();
