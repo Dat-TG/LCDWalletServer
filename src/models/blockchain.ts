@@ -83,6 +83,7 @@ class BlockChain {
     const latestBlock: Block = this.getLatestBlock();
     let nonce = 0;
     let hash = "";
+    const timestamp = Date.now();
 
     // Proof of Work - Finding a hash that meets the difficulty criteria
     do {
@@ -90,22 +91,19 @@ class BlockChain {
       hash = new Block({
         index: latestBlock.index + 1,
         previousHash: latestBlock.hash,
-        timestamp: Date.now(),
+        timestamp: timestamp,
         hash: "",
         data,
         difficulty: this.difficulty,
         nonce,
       }).calculateHash();
-    } while (
-      hash.substring(0, this.difficulty) !==
-      Array(this.difficulty + 1).join("0")
-    );
+    } while (!this.hashMatchesDifficulty(hash, this.difficulty));
 
     const newBlock = new Block({
       index: latestBlock.index + 1,
       hash,
       previousHash: latestBlock.hash,
-      timestamp: Date.now(),
+      timestamp: timestamp,
       data,
       difficulty: this.difficulty,
       nonce,
@@ -144,6 +142,19 @@ class BlockChain {
       console.log("Received blockchain is invalid");
       return false;
     }
+  }
+
+  hashMatchesDifficulty(hash: string, difficulty: number): boolean {
+    const hashInBinary: string = this.hexToBinary(hash);
+    const requiredPrefix: string = "0".repeat(difficulty);
+    return hashInBinary.startsWith(requiredPrefix);
+  }
+
+  hexToBinary(hexString: string): string {
+    return hexString
+      .split("")
+      .map((char) => ("0000" + parseInt(char, 16).toString(2)).slice(-4))
+      .join("");
   }
 }
 
