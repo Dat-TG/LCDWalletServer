@@ -1,9 +1,9 @@
 import express, { Request, Response, Application, NextFunction } from "express";
-import walletRoutes from "./routes/wallet.route";
 import dotenv from "dotenv";
 import swaggerUi from "swagger-ui-express";
 import swaggerOutput from "./swagger_output.json";
 import loggerMiddleware from "./middlewares/logger.middleware";
+import { BlockchainRouter, WalletRouter } from "./routes";
 
 //For env File
 dotenv.config();
@@ -29,7 +29,8 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 app.use(loggerMiddleware);
 
 //Routes
-app.use("/wallet", walletRoutes);
+app.use("/wallet", WalletRouter);
+app.use("/blockchain", BlockchainRouter);
 
 // Api Documentation
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerOutput));

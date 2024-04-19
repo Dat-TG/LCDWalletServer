@@ -328,6 +328,230 @@
           }
         }
       }
+    },
+    "/blockchain/get-blocks": {
+      "get": {
+        "tags": [
+          "Blockchain"
+        ],
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "List of all blocks in the blockchain",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "blocks": {
+                      "type": "array",
+                      "example": [],
+                      "items": {}
+                    }
+                  },
+                  "xml": {
+                    "name": "main"
+                  }
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "blocks": {
+                      "type": "array",
+                      "example": [],
+                      "items": {}
+                    }
+                  },
+                  "xml": {
+                    "name": "main"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error while fetching blocks",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Error message"
+                    }
+                  },
+                  "xml": {
+                    "name": "main"
+                  }
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Error message"
+                    }
+                  },
+                  "xml": {
+                    "name": "main"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/blockchain/mine-block": {
+      "post": {
+        "tags": [
+          "Blockchain"
+        ],
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "Block mined successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "newBlock": {
+                      "type": "object",
+                      "properties": {
+                        "index": {
+                          "type": "number",
+                          "example": 1
+                        },
+                        "hash": {
+                          "type": "string",
+                          "example": "000000"
+                        },
+                        "previousHash": {
+                          "type": "string",
+                          "example": "000000"
+                        },
+                        "timestamp": {
+                          "type": "number",
+                          "example": 0
+                        },
+                        "data": {
+                          "type": "string",
+                          "example": "Genesis Block"
+                        },
+                        "difficulty": {
+                          "type": "number",
+                          "example": 0
+                        },
+                        "nonce": {
+                          "type": "number",
+                          "example": 0
+                        }
+                      }
+                    }
+                  },
+                  "xml": {
+                    "name": "main"
+                  }
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "newBlock": {
+                      "type": "object",
+                      "properties": {
+                        "index": {
+                          "type": "number",
+                          "example": 1
+                        },
+                        "hash": {
+                          "type": "string",
+                          "example": "000000"
+                        },
+                        "previousHash": {
+                          "type": "string",
+                          "example": "000000"
+                        },
+                        "timestamp": {
+                          "type": "number",
+                          "example": 0
+                        },
+                        "data": {
+                          "type": "string",
+                          "example": "Genesis Block"
+                        },
+                        "difficulty": {
+                          "type": "number",
+                          "example": 0
+                        },
+                        "nonce": {
+                          "type": "number",
+                          "example": 0
+                        }
+                      }
+                    }
+                  },
+                  "xml": {
+                    "name": "main"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error while mining block",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Error message"
+                    }
+                  },
+                  "xml": {
+                    "name": "main"
+                  }
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Error message"
+                    }
+                  },
+                  "xml": {
+                    "name": "main"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "description": "Data to be added to the block",
+          "type": "object",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MineBlockRequestBody"
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -557,6 +781,18 @@
         },
         "xml": {
           "name": "AccessPrivateKeyResponseError"
+        }
+      },
+      "MineBlockRequestBody": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "string",
+            "example": "string"
+          }
+        },
+        "xml": {
+          "name": "MineBlockRequestBody"
         }
       }
     }

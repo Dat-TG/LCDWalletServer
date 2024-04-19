@@ -69,6 +69,9 @@ const doc = {
       AccessPrivateKeyResponseError: {
         error: "string",
       },
+      MineBlockRequestBody: {
+        data: "string",
+      },
     },
   },
 };
