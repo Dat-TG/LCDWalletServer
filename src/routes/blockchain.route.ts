@@ -1,9 +1,18 @@
 import express from "express";
-import { getBlocks, mineBlock } from "../controllers/blockchain.controller";
+import {
+  getAllBlocks,
+  getBlockByHash,
+  getBlockByIndex,
+  getLatestBlocks,
+  mineBlock,
+} from "../controllers/blockchain.controller";
 
 const router = express.Router();
 
-router.get("/get-blocks", getBlocks);
-router.post("/mine-block", mineBlock);
+router.get("/latest", getLatestBlocks);
+router.post("/mine", mineBlock);
+router.get("/all", getAllBlocks);
+router.get("/index/:index", getBlockByIndex);
+router.get("/hash/:hash", getBlockByHash);
 
 export default router;

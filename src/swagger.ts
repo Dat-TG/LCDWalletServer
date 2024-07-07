@@ -74,6 +74,23 @@ const doc = {
       },
     },
   },
+  definitions: {
+    Block: {
+      type: "object",
+      properties: {
+        index: { type: "number" },
+        hash: { type: "string" },
+        previousHash: { type: "string" },
+        timestamp: { type: "number" },
+        transactions: {
+          type: "array",
+          items: { $ref: "#/definitions/Transaction" },
+        },
+        validator: { type: "string" },
+        signature: { type: "string" },
+      },
+    },
+  },
 };
 
 const outputFile = "./swagger_output.json";

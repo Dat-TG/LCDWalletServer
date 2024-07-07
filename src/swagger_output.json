@@ -329,24 +329,27 @@
         }
       }
     },
-    "/blockchain/get-blocks": {
+    "/blocks/latest": {
       "get": {
         "tags": [
-          "Blockchain"
+          "Blocks"
         ],
-        "description": "",
+        "summary": "Get the latest 5 blocks",
+        "description": "Returns the latest 5 blocks from the blockchain.",
         "responses": {
           "200": {
-            "description": "List of all blocks in the blockchain",
+            "description": "An array of the latest blocks.",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "blocks": {
-                      "type": "array",
-                      "example": [],
-                      "items": {}
+                    "type": {
+                      "type": "string",
+                      "example": "array"
+                    },
+                    "items": {
+                      "$ref": "#/components/schemas/Block"
                     }
                   },
                   "xml": {
@@ -358,43 +361,12 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "blocks": {
-                      "type": "array",
-                      "example": [],
-                      "items": {}
-                    }
-                  },
-                  "xml": {
-                    "name": "main"
-                  }
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Error while fetching blocks",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "error": {
+                    "type": {
                       "type": "string",
-                      "example": "Error message"
-                    }
-                  },
-                  "xml": {
-                    "name": "main"
-                  }
-                }
-              },
-              "application/xml": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "error": {
-                      "type": "string",
-                      "example": "Error message"
+                      "example": "array"
+                    },
+                    "items": {
+                      "$ref": "#/components/schemas/Block"
                     }
                   },
                   "xml": {
@@ -407,52 +379,54 @@
         }
       }
     },
-    "/blockchain/mine-block": {
+    "/blocks/mine": {
       "post": {
         "tags": [
-          "Blockchain"
+          "Blocks"
         ],
-        "description": "",
+        "summary": "Mine a new block",
+        "description": "Creates and adds a new block to the blockchain if the validator is authorized.",
+        "parameters": [
+          {
+            "name": "validatorAddress",
+            "in": "query",
+            "description": "Public key of the validator",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
-          "200": {
-            "description": "Block mined successfully",
+          "201": {
+            "description": "The newly mined block.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Block"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/Block"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "newBlock": {
-                      "type": "object",
-                      "properties": {
-                        "index": {
-                          "type": "number",
-                          "example": 1
-                        },
-                        "hash": {
-                          "type": "string",
-                          "example": "000000"
-                        },
-                        "previousHash": {
-                          "type": "string",
-                          "example": "000000"
-                        },
-                        "timestamp": {
-                          "type": "number",
-                          "example": 0
-                        },
-                        "data": {
-                          "type": "string",
-                          "example": "Genesis Block"
-                        },
-                        "difficulty": {
-                          "type": "number",
-                          "example": 0
-                        },
-                        "nonce": {
-                          "type": "number",
-                          "example": 0
-                        }
-                      }
+                    "type": {
+                      "type": "string",
+                      "example": "string"
+                    },
+                    "example": {
+                      "type": "string",
+                      "example": "Invalid validator address"
                     }
                   },
                   "xml": {
@@ -464,38 +438,13 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "newBlock": {
-                      "type": "object",
-                      "properties": {
-                        "index": {
-                          "type": "number",
-                          "example": 1
-                        },
-                        "hash": {
-                          "type": "string",
-                          "example": "000000"
-                        },
-                        "previousHash": {
-                          "type": "string",
-                          "example": "000000"
-                        },
-                        "timestamp": {
-                          "type": "number",
-                          "example": 0
-                        },
-                        "data": {
-                          "type": "string",
-                          "example": "Genesis Block"
-                        },
-                        "difficulty": {
-                          "type": "number",
-                          "example": 0
-                        },
-                        "nonce": {
-                          "type": "number",
-                          "example": 0
-                        }
-                      }
+                    "type": {
+                      "type": "string",
+                      "example": "string"
+                    },
+                    "example": {
+                      "type": "string",
+                      "example": "Invalid validator address"
                     }
                   },
                   "xml": {
@@ -506,15 +455,19 @@
             }
           },
           "500": {
-            "description": "Error while mining block",
+            "description": "Internal Server Error",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "error": {
+                    "type": {
                       "type": "string",
-                      "example": "Error message"
+                      "example": "string"
+                    },
+                    "example": {
+                      "type": "string",
+                      "example": "An error occurred while mining the block"
                     }
                   },
                   "xml": {
@@ -526,9 +479,13 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "error": {
+                    "type": {
                       "type": "string",
-                      "example": "Error message"
+                      "example": "string"
+                    },
+                    "example": {
+                      "type": "string",
+                      "example": "An error occurred while mining the block"
                     }
                   },
                   "xml": {
@@ -538,17 +495,138 @@
               }
             }
           }
-        },
-        "requestBody": {
-          "required": true,
-          "description": "Data to be added to the block",
-          "type": "object",
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/MineBlockRequestBody"
+        }
+      }
+    },
+    "/blocks/all": {
+      "get": {
+        "tags": [
+          "Blocks"
+        ],
+        "summary": "Get All Blocks",
+        "description": "Retrieves all blocks in the blockchain, starting from the genesis block.",
+        "responses": {
+          "200": {
+            "description": "An array containing all blocks in the blockchain.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "example": "array"
+                    },
+                    "items": {
+                      "$ref": "#/components/schemas/Block"
+                    }
+                  },
+                  "xml": {
+                    "name": "main"
+                  }
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "example": "array"
+                    },
+                    "items": {
+                      "$ref": "#/components/schemas/Block"
+                    }
+                  },
+                  "xml": {
+                    "name": "main"
+                  }
+                }
               }
             }
+          },
+          "500": {
+            "description": "Internal Server Error. An unexpected error occurred while fetching the blocks."
+          }
+        }
+      }
+    },
+    "/blocks/index/{index}": {
+      "get": {
+        "tags": [
+          "Blocks"
+        ],
+        "summary": "Get Block By Index",
+        "description": "Retrieves a block by its index in the blockchain.",
+        "parameters": [
+          {
+            "name": "index",
+            "in": "path",
+            "description": "Index of the block to retrieve.",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The requested block.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Block"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/Block"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Block not found."
+          }
+        }
+      }
+    },
+    "/blocks/hash/{hash}": {
+      "get": {
+        "tags": [
+          "Blocks"
+        ],
+        "summary": "Get Block By Hash",
+        "description": "Retrieves a block by its hash value.",
+        "parameters": [
+          {
+            "name": "hash",
+            "in": "path",
+            "description": "Hash of the block to retrieve.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The requested block.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Block"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/Block"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Block not found."
           }
         }
       }
@@ -793,6 +871,92 @@
         },
         "xml": {
           "name": "MineBlockRequestBody"
+        }
+      },
+      "Block": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "example": "object"
+          },
+          "properties": {
+            "type": "object",
+            "properties": {
+              "index": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "number"
+                  }
+                }
+              },
+              "hash": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "string"
+                  }
+                }
+              },
+              "previousHash": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "string"
+                  }
+                }
+              },
+              "timestamp": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "number"
+                  }
+                }
+              },
+              "transactions": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "array"
+                  },
+                  "items": {
+                    "xml": {
+                      "name": "transaction"
+                    },
+                    "$ref": "#/components/schemas/Transaction"
+                  }
+                }
+              },
+              "validator": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "string"
+                  }
+                }
+              },
+              "signature": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "xml": {
+          "name": "Block"
         }
       }
     }

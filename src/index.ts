@@ -30,7 +30,7 @@ app.use(loggerMiddleware);
 
 //Routes
 app.use("/wallet", WalletRouter);
-app.use("/blockchain", BlockchainRouter);
+app.use("/blocks", BlockchainRouter);
 
 // Api Documentation
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerOutput));
