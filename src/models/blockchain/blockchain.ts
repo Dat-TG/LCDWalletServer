@@ -74,6 +74,64 @@ class Blockchain {
     return true;
   }
 
+  isNewChainValid(chain: Block[]): boolean {
+    if (
+      JSON.stringify(chain[0]) !== JSON.stringify(this.createGenesisBlock())
+    ) {
+      return false;
+    }
+
+    for (let i = 1; i < chain.length; i++) {
+      if (!this.isValidNewBlock(chain[i], chain[i - 1])) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  getUnspentTxOutsFromChain(chain: Block[]): UnspentTxOut[] {
+    let unspentTxOuts: UnspentTxOut[] = [];
+
+    chain.forEach((block) => {
+      block.transactions.forEach((tx) => {
+        tx.txOuts.forEach((txOut, index) => {
+          unspentTxOuts.push(
+            new UnspentTxOut(tx.id, index, txOut.address, txOut.amount)
+          );
+        });
+
+        tx.txIns.forEach((txIn) => {
+          unspentTxOuts = unspentTxOuts.filter(
+            (uTxO) =>
+              !(
+                uTxO.txOutId === txIn.txOutId &&
+                uTxO.txOutIndex === txIn.txOutIndex
+              )
+          );
+        });
+      });
+    });
+
+    return unspentTxOuts;
+  }
+
+  replaceChain(newChain: Block[]): void {
+    if (newChain.length <= this.chain.length) {
+      console.error("Received chain is not longer than the current chain.");
+      return;
+    }
+
+    if (!this.isNewChainValid(newChain)) {
+      console.error("Received chain is invalid.");
+      return;
+    }
+
+    console.log("Replacing current chain with new chain.");
+    this.chain = newChain;
+    // Optionally, update unspent transactions
+    this.unspentTxOuts = this.getUnspentTxOutsFromChain(newChain);
+  }
+
   updateUnspentTxOuts(block: Block): void {
     const newUnspentTxOuts: UnspentTxOut[] = [];
     const consumedTxOuts: { txOutId: string; txOutIndex: number }[] = [];
