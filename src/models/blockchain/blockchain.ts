@@ -110,6 +110,18 @@ class Blockchain {
       .reduce((sum, uTxO) => sum + uTxO.amount, 0);
   }
 
+  getTransactionById(transactionId: string): Transaction | null {
+    for (const block of this.chain) {
+      const transaction = block.transactions.find(
+        (tx) => tx.id === transactionId
+      );
+      if (transaction) {
+        return transaction;
+      }
+    }
+    return null;
+  }
+
   addTransaction(transaction: Transaction): boolean {
     if (
       Transaction.validateStructure(transaction) &&
@@ -213,6 +225,34 @@ class Blockchain {
     } else {
       throw new Error("Failed to add block to the chain");
     }
+  }
+
+  getTransactionPool(): Transaction[] {
+    return this.transactionPool.transactions;
+  }
+
+  getTransactionHistory(address: string): Transaction[] {
+    const transactions: Transaction[] = [];
+
+    for (const block of this.chain) {
+      for (const transaction of block.transactions) {
+        if (
+          transaction.txOuts.some((txOut) => txOut.address === address) ||
+          transaction.txIns.some((txIn) => {
+            const referencedTxOut = this.unspentTxOuts.find(
+              (uTxO) =>
+                uTxO.txOutId === txIn.txOutId &&
+                uTxO.txOutIndex === txIn.txOutIndex
+            );
+            return referencedTxOut?.address === address;
+          })
+        ) {
+          transactions.push(transaction);
+        }
+      }
+    }
+
+    return transactions;
   }
 }
 

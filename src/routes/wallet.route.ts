@@ -6,6 +6,7 @@ import {
   createWalletKeystore,
   generateMnemonicPhrase,
   generateQuestion,
+  getWalletBalance,
 } from "../controllers/wallet.controller";
 
 const router = express.Router();
@@ -16,5 +17,6 @@ router.get("/generate/mnemonic", generateMnemonicPhrase);
 router.get("/generate/question", generateQuestion);
 router.post("/access/mnemonic", accessWalletMnemonic);
 router.post("/access/privatekey", accessWalletPrivateKey);
+router.get("/balance", getWalletBalance);
 
 export default router;

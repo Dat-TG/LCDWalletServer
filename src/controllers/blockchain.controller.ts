@@ -1,9 +1,8 @@
 import { Request, Response } from "express"; // Assuming you're using Express.js
-import Blockchain from "../models/blockchain/blockchain";
 import Block from "../models/blockchain/block";
 import TransactionPool from "../models/transaction/TransactionPool";
+import blockchain from "../instances/blockchainInstance";
 
-const blockchain = new Blockchain();
 const transactionPool = new TransactionPool();
 
 // Controller for getting the latest 5 blocks

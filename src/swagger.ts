@@ -90,6 +90,55 @@ const doc = {
         signature: { type: "string" },
       },
     },
+
+    Transaction: {
+      type: "object",
+      properties: {
+        id: {
+          type: "string",
+          description: "Unique identifier of the transaction (usually a hash).",
+        },
+        txIns: {
+          type: "array",
+          description: "Array of transaction inputs (TxIn).",
+          items: { $ref: "#/definitions/TxIn" },
+        },
+        txOuts: {
+          type: "array",
+          description: "Array of transaction outputs (TxOut).",
+          items: { $ref: "#/definitions/TxOut" },
+        },
+      },
+    },
+
+    TxIn: {
+      type: "object",
+      properties: {
+        txOutId: {
+          type: "string",
+          description: "Transaction ID of the UTXO being spent.",
+        },
+        txOutIndex: {
+          type: "number",
+          description: "Output index of the UTXO being spent.",
+        },
+        signature: {
+          type: "string",
+          description: "Signature proving ownership of the UTXO.",
+        },
+      },
+    },
+
+    TxOut: {
+      type: "object",
+      properties: {
+        address: { type: "string", description: "Address of the recipient." },
+        amount: {
+          type: "number",
+          description: "Amount of cryptocurrency being sent.",
+        },
+      },
+    },
   },
 };
 

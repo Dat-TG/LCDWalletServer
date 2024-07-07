@@ -4,6 +4,7 @@ import crypto from "crypto";
 import fs from "fs";
 import { deriveKeyFromPassword } from "../utils/helper";
 import * as bip39 from "bip39";
+import blockchain from "../instances/blockchainInstance";
 const ec = new EC("secp256k1");
 const createWalletKeystore = async (
   req: Request,
@@ -438,6 +439,48 @@ const accessWalletPrivateKey = (
   }
 };
 
+// Controller to get the balance of a wallet
+const getWalletBalance = (req: Request, res: Response) => {
+  /*
+      #swagger.auto = false
+      #swagger.tags = ['Wallet']
+      #swagger.path = '/wallet/balance'
+      #swagger.method = 'get'
+      #swagger.summary = 'Get wallet balance'
+      #swagger.description = 'Returns the balance of the specified wallet address.'
+      #swagger.parameters['address'] = {
+          in: 'query',
+          description: 'The public address of the wallet',
+          required: true,
+          type: 'string'
+      }
+      #swagger.responses[200] = {
+          description: 'Wallet balance',
+          schema: { type: 'number' }
+      }
+      #swagger.responses[400] = {
+          description: 'Invalid request'
+      }
+      #swagger.responses[500] = {
+          description: 'Internal Server Error'
+      }
+  */
+  try {
+    const { address } = req.query;
+
+    if (!address || typeof address !== "string") {
+      return res.status(400).json({ error: "Invalid wallet address" });
+    }
+
+    const balance = blockchain.getBalance(address);
+    res.status(200).json({ balance });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ error: "An error occurred while getting the wallet balance" });
+  }
+};
+
 export {
   createWalletKeystore,
   accessWalletKeystore,
@@ -445,4 +488,5 @@ export {
   generateQuestion,
   accessWalletMnemonic,
   accessWalletPrivateKey,
+  getWalletBalance,
 };

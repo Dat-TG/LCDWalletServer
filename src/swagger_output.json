@@ -329,6 +329,67 @@
         }
       }
     },
+    "/wallet/balance": {
+      "get": {
+        "tags": [
+          "Wallet"
+        ],
+        "summary": "Get wallet balance",
+        "description": "Returns the balance of the specified wallet address.",
+        "parameters": [
+          {
+            "name": "address",
+            "in": "query",
+            "description": "The public address of the wallet",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Wallet balance",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "example": "number"
+                    }
+                  },
+                  "xml": {
+                    "name": "main"
+                  }
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "example": "number"
+                    }
+                  },
+                  "xml": {
+                    "name": "main"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
     "/blocks/latest": {
       "get": {
         "tags": [
@@ -627,6 +688,234 @@
           },
           "404": {
             "description": "Block not found."
+          }
+        }
+      }
+    },
+    "/transactions/send": {
+      "post": {
+        "tags": [
+          "Transactions"
+        ],
+        "summary": "Send a new transaction",
+        "description": "Creates and sends a new transaction from the specified wallet.",
+        "responses": {
+          "200": {
+            "description": "Transaction successfully created and sent.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Transaction"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/Transaction"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid transaction details."
+          },
+          "500": {
+            "description": "Internal Server Error. An unexpected error occurred while processing the transaction."
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "fromAddress",
+                  "toAddress",
+                  "amount",
+                  "privateKey"
+                ],
+                "properties": {
+                  "fromAddress": {
+                    "type": "string"
+                  },
+                  "toAddress": {
+                    "type": "string"
+                  },
+                  "amount": {
+                    "type": "number"
+                  },
+                  "privateKey": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/transactions/id/{id}": {
+      "get": {
+        "tags": [
+          "Transactions"
+        ],
+        "summary": "Get transaction details",
+        "description": "Returns the details of a transaction by its ID.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Transaction ID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Transaction details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Transaction"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/Transaction"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request"
+          },
+          "404": {
+            "description": "Transaction not found"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/transactions/pool": {
+      "get": {
+        "tags": [
+          "Transactions"
+        ],
+        "summary": "Get current transaction pool",
+        "description": "Returns the current transaction pool.",
+        "responses": {
+          "200": {
+            "description": "Current transaction pool",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "example": "array"
+                    },
+                    "items": {
+                      "$ref": "#/components/schemas/Transaction"
+                    }
+                  },
+                  "xml": {
+                    "name": "main"
+                  }
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "example": "array"
+                    },
+                    "items": {
+                      "$ref": "#/components/schemas/Transaction"
+                    }
+                  },
+                  "xml": {
+                    "name": "main"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/transactions/history/{address}": {
+      "get": {
+        "tags": [
+          "Transactions"
+        ],
+        "summary": "Get transaction history of a wallet",
+        "description": "Returns the transaction history of the specified wallet address.",
+        "parameters": [
+          {
+            "name": "address",
+            "in": "path",
+            "description": "Wallet address",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "example": "array"
+                    },
+                    "items": {
+                      "$ref": "#/components/schemas/Transaction"
+                    }
+                  },
+                  "xml": {
+                    "name": "main"
+                  }
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "example": "array"
+                    },
+                    "items": {
+                      "$ref": "#/components/schemas/Transaction"
+                    }
+                  },
+                  "xml": {
+                    "name": "main"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Address is required"
+          },
+          "500": {
+            "description": "Internal Server Error"
           }
         }
       }
@@ -957,6 +1246,173 @@
         },
         "xml": {
           "name": "Block"
+        }
+      },
+      "Transaction": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "example": "object"
+          },
+          "properties": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "string"
+                  },
+                  "description": {
+                    "type": "string",
+                    "example": "Unique identifier of the transaction (usually a hash)."
+                  }
+                }
+              },
+              "txIns": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "array"
+                  },
+                  "description": {
+                    "type": "string",
+                    "example": "Array of transaction inputs (TxIn)."
+                  },
+                  "items": {
+                    "xml": {
+                      "name": "txin"
+                    },
+                    "$ref": "#/components/schemas/TxIn"
+                  }
+                }
+              },
+              "txOuts": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "array"
+                  },
+                  "description": {
+                    "type": "string",
+                    "example": "Array of transaction outputs (TxOut)."
+                  },
+                  "items": {
+                    "xml": {
+                      "name": "txout"
+                    },
+                    "$ref": "#/components/schemas/TxOut"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "xml": {
+          "name": "Transaction"
+        }
+      },
+      "TxIn": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "example": "object"
+          },
+          "properties": {
+            "type": "object",
+            "properties": {
+              "txOutId": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "string"
+                  },
+                  "description": {
+                    "type": "string",
+                    "example": "Transaction ID of the UTXO being spent."
+                  }
+                }
+              },
+              "txOutIndex": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "number"
+                  },
+                  "description": {
+                    "type": "string",
+                    "example": "Output index of the UTXO being spent."
+                  }
+                }
+              },
+              "signature": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "string"
+                  },
+                  "description": {
+                    "type": "string",
+                    "example": "Signature proving ownership of the UTXO."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "xml": {
+          "name": "TxIn"
+        }
+      },
+      "TxOut": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "example": "object"
+          },
+          "properties": {
+            "type": "object",
+            "properties": {
+              "address": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "string"
+                  },
+                  "description": {
+                    "type": "string",
+                    "example": "Address of the recipient."
+                  }
+                }
+              },
+              "amount": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "number"
+                  },
+                  "description": {
+                    "type": "string",
+                    "example": "Amount of cryptocurrency being sent."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "xml": {
+          "name": "TxOut"
         }
       }
     }

@@ -3,7 +3,15 @@ class TxIn {
   txOutIndex: number;
   signature: string;
 
-  constructor(txOutId: string, txOutIndex: number, signature: string) {
+  constructor({
+    txOutId,
+    txOutIndex,
+    signature,
+  }: {
+    txOutId: string;
+    txOutIndex: number;
+    signature: string;
+  }) {
     this.txOutId = txOutId;
     this.txOutIndex = txOutIndex;
     this.signature = signature;

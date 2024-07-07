@@ -3,7 +3,7 @@ import dotenv from "dotenv";
 import swaggerUi from "swagger-ui-express";
 import swaggerOutput from "./swagger_output.json";
 import loggerMiddleware from "./middlewares/logger.middleware";
-import { BlockchainRouter, WalletRouter } from "./routes";
+import { BlockchainRouter, TransactionRouter, WalletRouter } from "./routes";
 
 //For env File
 dotenv.config();
@@ -31,6 +31,7 @@ app.use(loggerMiddleware);
 //Routes
 app.use("/wallet", WalletRouter);
 app.use("/blocks", BlockchainRouter);
+app.use("/transactions", TransactionRouter);
 
 // Api Documentation
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerOutput));
