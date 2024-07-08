@@ -3,13 +3,23 @@ import dotenv from "dotenv";
 import swaggerUi from "swagger-ui-express";
 import swaggerOutput from "./swagger_output.json";
 import loggerMiddleware from "./middlewares/logger.middleware";
-import { BlockchainRouter, TransactionRouter, WalletRouter } from "./routes";
+import {
+  BlockchainRouter,
+  TransactionRouter,
+  WalletRouter,
+  FaucetRouter,
+} from "./routes";
+import http from "http";
+import { initWebSocketServer } from "./websocket";
 
 //For env File
 dotenv.config();
 
 const app: Application = express();
 const port = process.env.PORT || 3000;
+
+// Create HTTP server
+const server = http.createServer(app);
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -32,6 +42,7 @@ app.use(loggerMiddleware);
 app.use("/wallet", WalletRouter);
 app.use("/blocks", BlockchainRouter);
 app.use("/transactions", TransactionRouter);
+app.use("/faucet", FaucetRouter);
 
 // Api Documentation
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerOutput));
@@ -40,6 +51,10 @@ app.get("/", (req: Request, res: Response) => {
   res.send("LCDWallet Server");
 });
 
-app.listen(port, () => {
+// Initialize WebSocket server
+initWebSocketServer(server);
+
+// Start the server
+server.listen(port, () => {
   console.log(`Server is Fire at http://localhost:${port}`);
 });

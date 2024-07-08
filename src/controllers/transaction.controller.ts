@@ -51,28 +51,47 @@ export const sendTransaction = (req: Request, res: Response) => {
         .json({ error: "Missing required transaction details" });
     }
 
-    // Create a new transaction
-    const txIn = new TxIn({ txOutId: "", txOutIndex: 0, signature: "" }); // Signature will be generated below
-    const txOut = new TxOut(toAddress, amount);
+    // Create the inputs for the transaction
+    const unspentTxOuts = blockchain.getUnspentTxOuts(fromAddress);
+    let accumulatedAmount = 0;
+    const txIns: TxIn[] = [];
 
-    const transaction = new Transaction({
-      txIns: [txIn],
-      txOuts: [txOut],
-    });
+    for (const uTxO of unspentTxOuts) {
+      accumulatedAmount += uTxO.amount;
+      txIns.push(
+        new TxIn({
+          txOutId: uTxO.txOutId,
+          txOutIndex: uTxO.txOutIndex,
+          signature: "",
+        })
+      );
+      if (accumulatedAmount >= amount) break;
+    }
 
-    // Generate the transaction ID
-    transaction.id = transaction.calculateHash();
+    if (accumulatedAmount < amount) {
+      return res.status(400).json({ error: "Insufficient balance" });
+    }
 
-    // Sign the transaction with the private key
+    // Create the outputs for the transaction
+    const txOuts: TxOut[] = [new TxOut({ address: toAddress, amount })];
+    if (accumulatedAmount > amount) {
+      txOuts.push(
+        new TxOut({ address: fromAddress, amount: accumulatedAmount - amount })
+      );
+    }
+
+    const transaction = new Transaction({ txIns, txOuts });
+
+    // Sign the transaction
     transaction.signTransaction(privateKey);
 
     // Validate the transaction
-    if (!blockchain.isValidTransaction(transaction)) {
-      return res.status(400).json({ error: "Invalid transaction" });
+    if (!Transaction.validateStructure(transaction)) {
+      return res.status(400).json({ error: "Invalid transaction structure" });
     }
 
     // Add the transaction to the pool
-    blockchain.transactionPool.addTransaction(transaction);
+    blockchain.addTransaction(transaction);
 
     // Optionally broadcast the transaction to other nodes here
 

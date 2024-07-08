@@ -14,16 +14,40 @@ class Blockchain {
   constructor() {
     this.chain = [this.createGenesisBlock()];
     this.transactionPool = new TransactionPool();
-    this.unspentTxOuts = [];
-    this.validators = new Map<string, number>();
+    this.unspentTxOuts = this.createGenesisUnspentTxOuts();
+    this.validators = new Map<string, number>([["genesis-validator", 1000]]);
+  }
+
+  createGenesisUnspentTxOuts(): UnspentTxOut[] {
+    const genesisBlock = this.chain[0];
+    const unspentTxOuts: UnspentTxOut[] = [];
+    for (const tx of genesisBlock.transactions) {
+      for (let i = 0; i < tx.txOuts.length; i++) {
+        unspentTxOuts.push(
+          new UnspentTxOut(tx.id, i, tx.txOuts[i].address, tx.txOuts[i].amount)
+        );
+      }
+    }
+    return unspentTxOuts;
   }
 
   createGenesisBlock(): Block {
+    const initialTxOut = new TxOut({
+      address:
+        "04ddf6c141bdeae4244494ceb4fc3076c77e57df0f28fe96ab9c030b7af78f8e860ea6850e5305dfa02cf7d57283988e696fc1bc1ea3c930245598935c5d030019", // Replace with the address of your initial wallet
+      amount: 1000, // Assign an initial amount
+    });
+
+    const genesisTransaction = new Transaction({
+      txIns: [],
+      txOuts: [initialTxOut],
+    });
+
     return new Block({
       index: 0,
       previousHash: "0",
       timestamp: Date.now(),
-      transactions: [],
+      transactions: [genesisTransaction],
       validator: "genesis-validator", // This can be a predefined value or an address
       signature: "genesis-signature", // This can be a predefined value
     });
@@ -42,6 +66,7 @@ class Blockchain {
       this.updateUnspentTxOuts(newBlock);
       return true;
     }
+    console.error("Invalid block");
     return false;
   }
 
@@ -115,6 +140,10 @@ class Blockchain {
     return unspentTxOuts;
   }
 
+  getUnspentTxOuts(address: string): UnspentTxOut[] {
+    return this.unspentTxOuts.filter((uTxO) => uTxO.address === address);
+  }
+
   replaceChain(newChain: Block[]): void {
     if (newChain.length <= this.chain.length) {
       console.error("Received chain is not longer than the current chain.");
@@ -162,6 +191,35 @@ class Blockchain {
       .concat(newUnspentTxOuts);
   }
 
+  updateUnspentTxOutsWhenMakingTransaction(transaction: Transaction): void {
+    const newUnspentTxOuts: UnspentTxOut[] = [];
+    const consumedTxOuts: { txOutId: string; txOutIndex: number }[] = [];
+
+    transaction.txOuts.forEach((txOut: TxOut, index: number) => {
+      newUnspentTxOuts.push(
+        new UnspentTxOut(transaction.id, index, txOut.address, txOut.amount)
+      );
+    });
+
+    transaction.txIns.forEach((txIn: TxIn) => {
+      consumedTxOuts.push({
+        txOutId: txIn.txOutId,
+        txOutIndex: txIn.txOutIndex,
+      });
+    });
+
+    this.unspentTxOuts = this.unspentTxOuts
+      .filter(
+        (uTxO: UnspentTxOut) =>
+          !consumedTxOuts.find(
+            (cTxO) =>
+              cTxO.txOutId === uTxO.txOutId &&
+              cTxO.txOutIndex === cTxO.txOutIndex
+          )
+      )
+      .concat(newUnspentTxOuts);
+  }
+
   getBalance(address: string): number {
     return this.unspentTxOuts
       .filter((uTxO) => uTxO.address === address)
@@ -185,6 +243,8 @@ class Blockchain {
       Transaction.validateStructure(transaction) &&
       this.isValidTransaction(transaction)
     ) {
+      // Update unspent transaction outputs
+      this.updateUnspentTxOutsWhenMakingTransaction(transaction);
       this.transactionPool.addTransaction(transaction);
       return true;
     }

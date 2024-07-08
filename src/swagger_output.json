@@ -919,6 +919,41 @@
           }
         }
       }
+    },
+    "/faucet/": {
+      "post": {
+        "tags": [
+          "Wallet"
+        ],
+        "summary": "Request initial funds",
+        "description": "Allows a wallet to request initial funds to start using the blockchain.",
+        "responses": {
+          "200": {
+            "description": "Initial funds sent successfully"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "address"
+                ],
+                "properties": {
+                  "address": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
