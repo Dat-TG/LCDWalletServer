@@ -1,3 +1,4 @@
+import { TransactionDetails } from "../../types/transactionDetails";
 import Transaction from "../transaction/Transaction";
 import TransactionPool from "../transaction/TransactionPool";
 import TxIn from "../transaction/TxIn";
@@ -340,8 +341,23 @@ class Blockchain {
     return this.transactionPool.transactions;
   }
 
-  getTransactionHistory(address: string): Transaction[] {
-    const transactions: Transaction[] = [];
+  // Helper function to find the sender address of a transaction
+  private findSenderAddress(txIns: TxIn[]): string | undefined {
+    for (const txIn of txIns) {
+      const referencedTxOut = this.unspentTxOuts.find(
+        (uTxO) =>
+          uTxO.txOutId === txIn.txOutId && uTxO.txOutIndex === txIn.txOutIndex
+      );
+      if (referencedTxOut) {
+        return referencedTxOut.address;
+      }
+    }
+    return undefined;
+  }
+
+  // Function to get transaction history
+  getTransactionHistory(address: string): TransactionDetails[] {
+    const transactionDetails: TransactionDetails[] = [];
 
     // Helper function to check if a transaction involves the given address
     const isAddressInTransaction = (transaction: Transaction): boolean => {
@@ -358,11 +374,32 @@ class Blockchain {
       );
     };
 
-    // Check the blockchain for transactions
+    // Extract transaction details
+    const extractTransactionDetails = (
+      transaction: Transaction,
+      status: string
+    ) => {
+      const fromAddress = this.findSenderAddress(transaction.txIns);
+      transaction.txOuts.forEach((txOut) => {
+        // Ensure we are considering only outgoing transactions where the address is the recipient
+        if (txOut.address === address || fromAddress === address) {
+          transactionDetails.push({
+            status,
+            id: transaction.id,
+            fromAddress: fromAddress || "LCD Faucet",
+            toAddress: txOut.address,
+            amount: txOut.amount,
+            timestamp: transaction.timestamp,
+          });
+        }
+      });
+    };
+
+    // Check the blockchain for confirmed transactions
     for (const block of this.chain) {
       for (const transaction of block.transactions) {
         if (isAddressInTransaction(transaction)) {
-          transactions.push(transaction);
+          extractTransactionDetails(transaction, "confirmed");
         }
       }
     }
@@ -370,11 +407,18 @@ class Blockchain {
     // Check the transaction pool for pending transactions
     for (const transaction of this.transactionPool.transactions) {
       if (isAddressInTransaction(transaction)) {
-        transactions.push(transaction);
+        extractTransactionDetails(transaction, "pending");
       }
     }
 
-    return transactions;
+    // Filter out transactions where the address is the change address
+    const filteredTransactionDetails = transactionDetails.filter(
+      (transaction) => {
+        return transaction.fromAddress !== transaction.toAddress;
+      }
+    );
+
+    return filteredTransactionDetails;
   }
 }
 

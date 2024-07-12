@@ -5,6 +5,7 @@ import TxIn from "../models/transaction/TxIn";
 import TxOut from "../models/transaction/TxOut";
 import { ec as EC } from "elliptic";
 import blockchain from "../instances/blockchainInstance";
+import { TransactionDetails } from "../types/transactionDetails";
 const ec = new EC("secp256k1");
 
 export const sendTransaction = (req: Request, res: Response) => {
@@ -230,7 +231,7 @@ export const getTransactionHistory = (req: Request, res: Response) => {
   }
 
   try {
-    const transactions: Transaction[] =
+    const transactions: TransactionDetails[] =
       blockchain.getTransactionHistory(address);
     return res.status(200).json(transactions);
   } catch (error) {
