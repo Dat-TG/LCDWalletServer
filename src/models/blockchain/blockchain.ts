@@ -364,6 +364,10 @@ class Blockchain {
 
     newBlock.hash = newBlock.calculateHash();
     newBlock.signature = this.signBlock(newBlock, validator); // Sign the block
+    // Simulate delay in mining
+    setTimeout(() => {
+      console.log("Block mined:", newBlock);
+    }, 5000);
     if (this.addBlock(newBlock)) {
       this.transactionPool.transactions = []; // Clear transaction pool after mining a block
       return newBlock;

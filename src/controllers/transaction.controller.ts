@@ -111,7 +111,7 @@ export const sendTransaction = (req: Request, res: Response) => {
     // Add the transaction to the pool
     blockchain.addTransaction(transaction);
 
-    // Optionally broadcast the transaction to other nodes here
+    blockchain.mineBlock();
 
     res.status(200).json(transaction);
   } catch (error) {
