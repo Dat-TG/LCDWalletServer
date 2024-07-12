@@ -5,7 +5,9 @@ import TxIn from "../models/transaction/TxIn";
 import blockchain from "../instances/blockchainInstance";
 import Block from "../models/blockchain/block";
 
-// Controller to distribute initial funds
+const requestHistory: Map<string, number> = new Map(); // Map to store last request time for each address
+
+// Controller to send initial funds
 export const requestInitialFunds = (req: Request, res: Response) => {
   /*
       #swagger.auto = false
@@ -42,6 +44,18 @@ export const requestInitialFunds = (req: Request, res: Response) => {
       return res.status(400).json({ error: "Address is required" });
     }
 
+    // Check if address has requested funds within the last 24 hours
+    const lastRequestTime = requestHistory.get(address) || 0;
+    const twentyFourHoursAgo = Date.now() - 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+    const nextRequestTime = new Date(lastRequestTime + 24 * 60 * 60 * 1000);
+
+    if (lastRequestTime >= twentyFourHoursAgo) {
+      return res.status(400).json({
+        error: `Address has already requested funds within the last 24 hours, come back after ${nextRequestTime}`,
+        nextRequestTime,
+      });
+    }
+
     const initialTxOut = new TxOut({
       address,
       amount: 100, // Assign an initial amount
@@ -68,6 +82,9 @@ export const requestInitialFunds = (req: Request, res: Response) => {
     });
 
     blockchain.addBlock(block);
+
+    // Update last request time for the address
+    requestHistory.set(address, Date.now());
 
     return res.status(200).json({ message: "Initial funds sent successfully" });
   } catch (error) {
