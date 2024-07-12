@@ -292,8 +292,9 @@ class Blockchain {
     this.validators.set(publicKey, stake);
   }
 
-  isValidatorRegistered(publicKey: string): boolean {
-    return this.validators.has(publicKey);
+  isValidatorRegistered(publicKey: string): number {
+    // Return the stake of the validator if it exists else return 0
+    return this.validators.get(publicKey) || 0;
   }
 
   selectValidator(): string {

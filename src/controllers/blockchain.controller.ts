@@ -255,13 +255,21 @@ export const registerValidator = (req: Request, res: Response) => {
   try {
     const { publicKey, stake } = req.body;
 
-    if (!publicKey || typeof publicKey !== "string" || !stake || isNaN(stake)) {
+    if (!publicKey || typeof publicKey !== "string" || isNaN(stake)) {
       return res.status(400).json({ error: "Invalid public key or stake" });
     }
 
     blockchain.registerValidator(publicKey, stake);
 
-    res.status(200).json({ message: "Validator registered successfully" });
+    if (stake > 0) {
+      res
+        .status(200)
+        .json({ message: "Validator registered successfully", stake });
+    } else {
+      res
+        .status(200)
+        .json({ message: "Validator unregistered successfully", stake });
+    }
   } catch (error) {
     if (error instanceof Error) {
       res.status(500).json({ error: error.message });
@@ -287,8 +295,8 @@ export const isValidatorRegistered = (req: Request, res: Response) => {
         type: 'string'
       }
       #swagger.responses[200] = {
-        description: 'Validator is registered.',
-        schema: { type: 'boolean' }
+        description: 'Stake of validator if registered else 0',
+        schema: { type: 'number' }
       }
       #swagger.responses[404] = {
         description: 'Validator is not registered.'
@@ -301,13 +309,9 @@ export const isValidatorRegistered = (req: Request, res: Response) => {
       return res.status(400).json({ error: "Invalid public key" });
     }
 
-    const isRegistered = blockchain.isValidatorRegistered(publicKey);
+    const stake = blockchain.isValidatorRegistered(publicKey);
 
-    if (isRegistered) {
-      res.json(true);
-    } else {
-      res.status(404).json(false);
-    }
+    res.status(200).json({ stake: stake });
   } catch (error) {
     res
       .status(500)
