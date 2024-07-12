@@ -8,6 +8,7 @@ import crypto from "crypto";
 
 class Transaction {
   id: string;
+  timestamp: number;
   txIns: TxIn[];
   txOuts: TxOut[];
 
@@ -15,6 +16,7 @@ class Transaction {
     this.txIns = txIns;
     this.txOuts = txOuts;
     this.id = this.generateId();
+    this.timestamp = Date.now();
   }
 
   private generateId(): string {

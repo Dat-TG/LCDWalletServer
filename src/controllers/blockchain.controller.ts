@@ -215,3 +215,102 @@ export const getBlockByHash = (req: Request, res: Response) => {
       .json({ error: "An error occurred while fetching the block" });
   }
 };
+
+// Register validator for blockchain, receives the public key and stake of the validator
+export const registerValidator = (req: Request, res: Response) => {
+  /*
+      #swagger.auto = false
+      #swagger.tags = ['Validators']
+      #swagger.path = '/blocks/register'
+      #swagger.method = 'post'
+      #swagger.summary = 'Register a new validator'
+      #swagger.description = 'Registers a new validator with the blockchain.'
+      #swagger.requestBody = {
+        required: true,
+        content: {
+          "application/json": {
+            schema: {
+              type: 'object',
+              required: ['publicKey', 'stake'],
+              properties: {
+                publicKey: { type: 'string' },
+                stake: { type: 'number' }
+              }
+            }
+          }
+        }
+      }
+      #swagger.responses[200] = {
+        description: 'Validator registered successfully.'
+      }
+      #swagger.responses[400] = {
+        description: 'Bad Request',
+        schema: { type: 'string', example: 'Invalid public key or stake' }
+      }
+      #swagger.responses[500] = {
+        description: 'Internal Server Error',
+        schema: { type: 'string', example: 'An error occurred while registering the validator' }
+      }
+  */
+  try {
+    const { publicKey, stake } = req.body;
+
+    if (!publicKey || typeof publicKey !== "string" || !stake || isNaN(stake)) {
+      return res.status(400).json({ error: "Invalid public key or stake" });
+    }
+
+    blockchain.registerValidator(publicKey, stake);
+
+    res.status(200).json({ message: "Validator registered successfully" });
+  } catch (error) {
+    if (error instanceof Error) {
+      res.status(500).json({ error: error.message });
+    } else {
+      res.status(500).json({ error: "An unknown error occurred." });
+    }
+  }
+};
+
+// Check if a validator is registered
+export const isValidatorRegistered = (req: Request, res: Response) => {
+  /*
+      #swagger.auto = false
+      #swagger.tags = ['Validators']
+      #swagger.path = '/blocks/registered/{publicKey}'
+      #swagger.method = 'get'
+      #swagger.summary = 'Check if a validator is registered'
+      #swagger.description = 'Verifies if a validator is registered with the blockchain.'
+      #swagger.parameters['publicKey'] = {
+        in: 'path',
+        description: 'Public key of the validator to check.',
+        required: true,
+        type: 'string'
+      }
+      #swagger.responses[200] = {
+        description: 'Validator is registered.',
+        schema: { type: 'boolean' }
+      }
+      #swagger.responses[404] = {
+        description: 'Validator is not registered.'
+      }
+  */
+  try {
+    const { publicKey } = req.params;
+
+    if (!publicKey || typeof publicKey !== "string") {
+      return res.status(400).json({ error: "Invalid public key" });
+    }
+
+    const isRegistered = blockchain.isValidatorRegistered(publicKey);
+
+    if (isRegistered) {
+      res.json(true);
+    } else {
+      res.status(404).json(false);
+    }
+  } catch (error) {
+    res
+      .status(500)
+      .json({ error: "An error occurred while checking the validator" });
+  }
+};

@@ -191,45 +191,6 @@ class Blockchain {
       .concat(newUnspentTxOuts);
   }
 
-  updateUnspentTxOutsWhenMakingTransaction(transaction: Transaction): void {
-    console.log("Updating unspent transaction outputs", transaction);
-
-    // Initialize arrays to hold new and consumed unspent transaction outputs
-    const newUnspentTxOuts: UnspentTxOut[] = [];
-    const consumedTxOuts: { txOutId: string; txOutIndex: number }[] = [];
-
-    // Add new unspent transaction outputs from the transaction's outputs
-    transaction.txOuts.forEach((txOut: TxOut, index: number) => {
-      newUnspentTxOuts.push(
-        new UnspentTxOut(transaction.id, index, txOut.address, txOut.amount)
-      );
-    });
-
-    // Track consumed transaction outputs from the transaction's inputs
-    transaction.txIns.forEach((txIn: TxIn) => {
-      consumedTxOuts.push({
-        txOutId: txIn.txOutId,
-        txOutIndex: txIn.txOutIndex,
-      });
-    });
-
-    // Filter out consumed transaction outputs from the existing unspent transaction outputs
-    const updatedUnspentTxOuts = this.unspentTxOuts
-      .filter(
-        (uTxO: UnspentTxOut) =>
-          !consumedTxOuts.find(
-            (cTxO) =>
-              cTxO.txOutId === uTxO.txOutId &&
-              cTxO.txOutIndex === uTxO.txOutIndex
-          )
-      )
-      .concat(newUnspentTxOuts);
-
-    this.unspentTxOuts = updatedUnspentTxOuts;
-
-    console.log("Unspent transaction outputs updated", this.unspentTxOuts);
-  }
-
   getBalance(address: string): number {
     console.log("Getting balance of address", address);
     console.log(
@@ -260,8 +221,6 @@ class Blockchain {
       Transaction.validateStructure(transaction) &&
       this.isValidTransaction(transaction)
     ) {
-      // Update unspent transaction outputs
-      this.updateUnspentTxOutsWhenMakingTransaction(transaction);
       this.transactionPool.addTransaction(transaction);
       return true;
     }
@@ -333,6 +292,10 @@ class Blockchain {
     this.validators.set(publicKey, stake);
   }
 
+  isValidatorRegistered(publicKey: string): boolean {
+    return this.validators.has(publicKey);
+  }
+
   selectValidator(): string {
     const totalStake = Array.from(this.validators.values()).reduce(
       (acc, stake) => acc + stake,
@@ -379,21 +342,34 @@ class Blockchain {
   getTransactionHistory(address: string): Transaction[] {
     const transactions: Transaction[] = [];
 
+    // Helper function to check if a transaction involves the given address
+    const isAddressInTransaction = (transaction: Transaction): boolean => {
+      return (
+        transaction.txOuts.some((txOut) => txOut.address === address) ||
+        transaction.txIns.some((txIn) => {
+          const referencedTxOut = this.unspentTxOuts.find(
+            (uTxO) =>
+              uTxO.txOutId === txIn.txOutId &&
+              uTxO.txOutIndex === txIn.txOutIndex
+          );
+          return referencedTxOut?.address === address;
+        })
+      );
+    };
+
+    // Check the blockchain for transactions
     for (const block of this.chain) {
       for (const transaction of block.transactions) {
-        if (
-          transaction.txOuts.some((txOut) => txOut.address === address) ||
-          transaction.txIns.some((txIn) => {
-            const referencedTxOut = this.unspentTxOuts.find(
-              (uTxO) =>
-                uTxO.txOutId === txIn.txOutId &&
-                uTxO.txOutIndex === txIn.txOutIndex
-            );
-            return referencedTxOut?.address === address;
-          })
-        ) {
+        if (isAddressInTransaction(transaction)) {
           transactions.push(transaction);
         }
+      }
+    }
+
+    // Check the transaction pool for pending transactions
+    for (const transaction of this.transactionPool.transactions) {
+      if (isAddressInTransaction(transaction)) {
+        transactions.push(transaction);
       }
     }
 
