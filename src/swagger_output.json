@@ -449,9 +449,9 @@
         "description": "Creates and adds a new block to the blockchain if the validator is authorized.",
         "parameters": [
           {
-            "name": "validatorAddress",
+            "name": "privateKey",
             "in": "query",
-            "description": "Public key of the validator",
+            "description": "Private key of the validator",
             "required": true,
             "schema": {
               "type": "string"
@@ -793,11 +793,11 @@
               "schema": {
                 "type": "object",
                 "required": [
-                  "publicKey",
+                  "privateKey",
                   "stake"
                 ],
                 "properties": {
-                  "publicKey": {
+                  "privateKey": {
                     "type": "string"
                   },
                   "stake": {
@@ -810,18 +810,18 @@
         }
       }
     },
-    "/blocks/registered/{publicKey}": {
+    "/blocks/registered/{privateKey}": {
       "get": {
         "tags": [
           "Validators"
         ],
         "summary": "Check if a validator is registered",
-        "description": "Verifies if a validator is registered with the blockchain.",
+        "description": "Checks if a validator is registered with the blockchain.",
         "parameters": [
           {
-            "name": "publicKey",
+            "name": "privateKey",
             "in": "path",
-            "description": "Public key of the validator to check.",
+            "description": "Private key of the validator.",
             "required": true,
             "schema": {
               "type": "string"
@@ -830,7 +830,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Validator is registered.",
+            "description": "Validator registration status.",
             "content": {
               "application/json": {
                 "schema": {
@@ -862,8 +862,87 @@
               }
             }
           },
-          "404": {
-            "description": "Validator is not registered."
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "example": "string"
+                    },
+                    "example": {
+                      "type": "string",
+                      "example": "Invalid public key"
+                    }
+                  },
+                  "xml": {
+                    "name": "main"
+                  }
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "example": "string"
+                    },
+                    "example": {
+                      "type": "string",
+                      "example": "Invalid public key"
+                    }
+                  },
+                  "xml": {
+                    "name": "main"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "example": "string"
+                    },
+                    "example": {
+                      "type": "string",
+                      "example": "An error occurred while checking the validator"
+                    }
+                  },
+                  "xml": {
+                    "name": "main"
+                  }
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "example": "string"
+                    },
+                    "example": {
+                      "type": "string",
+                      "example": "An error occurred while checking the validator"
+                    }
+                  },
+                  "xml": {
+                    "name": "main"
+                  }
+                }
+              }
+            }
           }
         }
       }

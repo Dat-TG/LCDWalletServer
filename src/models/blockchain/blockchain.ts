@@ -1,10 +1,13 @@
 import { TransactionDetails } from "../../types/transactionDetails";
+import { getPublicKeyFromPrivateKey } from "../../utils/helper";
 import Transaction from "../transaction/Transaction";
 import TransactionPool from "../transaction/TransactionPool";
 import TxIn from "../transaction/TxIn";
 import TxOut from "../transaction/TxOut";
 import UnspentTxOut from "../transaction/UnspentTxOut";
 import Block from "./block";
+import { ec as EC } from "elliptic";
+const ec = new EC("secp256k1");
 
 class Blockchain {
   chain: Block[];
@@ -16,7 +19,7 @@ class Blockchain {
     this.chain = [this.createGenesisBlock()];
     this.transactionPool = new TransactionPool();
     this.unspentTxOuts = this.createGenesisUnspentTxOuts();
-    this.validators = new Map<string, number>([["genesis-validator", 1000]]);
+    this.validators = new Map<string, number>([]);
   }
 
   createGenesisUnspentTxOuts(): UnspentTxOut[] {
@@ -289,13 +292,13 @@ class Blockchain {
     return true;
   }
 
-  registerValidator(publicKey: string, stake: number): void {
-    this.validators.set(publicKey, stake);
+  registerValidator(privateKey: string, stake: number): void {
+    this.validators.set(privateKey, stake);
   }
 
-  isValidatorRegistered(publicKey: string): number {
+  isValidatorRegistered(privateKey: string): number {
     // Return the stake of the validator if it exists else return 0
-    return this.validators.get(publicKey) || 0;
+    return this.validators.get(privateKey) || 0;
   }
 
   selectValidator(): string {
@@ -307,28 +310,60 @@ class Blockchain {
     const random = Math.random() * totalStake;
     let cumulativeStake = 0;
 
-    for (const [publicKey, stake] of this.validators.entries()) {
+    for (const [validator, stake] of this.validators.entries()) {
       cumulativeStake += stake;
       if (random < cumulativeStake) {
-        return publicKey;
+        return validator;
       }
     }
 
     throw new Error("No validators found");
   }
 
+  // Function to create a reward transaction for the validator
+  createRewardTransaction(validator: string): Transaction {
+    const rewardAmount = 50; // Example reward amount
+    const rewardTransaction = new Transaction({
+      txIns: [],
+      txOuts: [
+        {
+          address: validator,
+          amount: rewardAmount,
+        },
+      ],
+    });
+    rewardTransaction.id = rewardTransaction.calculateHash(); // Calculate ID for the reward transaction
+    return rewardTransaction;
+  }
+
+  // Function to sign a block
+  signBlock(block: Block, privateKey: string): string {
+    const dataToSign = block.calculateHash(); // Example data to sign
+    const key = ec.keyFromPrivate(privateKey);
+    const signature = key.sign(dataToSign, "base64");
+    return signature.toDER("hex");
+  }
+
   mineBlock(): Block {
     const validator = this.selectValidator();
+    const rewardTransaction = this.createRewardTransaction(
+      getPublicKeyFromPrivateKey(validator)
+    );
+    const transactions = [
+      ...this.transactionPool.transactions,
+      rewardTransaction,
+    ];
     const newBlock = new Block({
       index: this.chain.length,
       previousHash: this.getLatestBlock().hash,
       timestamp: Date.now(),
-      transactions: this.transactionPool.transactions,
-      validator: validator,
+      transactions: transactions,
+      validator: getPublicKeyFromPrivateKey(validator),
       signature: "", // Add logic to create a signature
     });
 
     newBlock.hash = newBlock.calculateHash();
+    newBlock.signature = this.signBlock(newBlock, validator); // Sign the block
     if (this.addBlock(newBlock)) {
       this.transactionPool.transactions = []; // Clear transaction pool after mining a block
       return newBlock;
@@ -417,6 +452,9 @@ class Blockchain {
         return transaction.fromAddress !== transaction.toAddress;
       }
     );
+
+    // Sort transactions by timestamp in descending order
+    filteredTransactionDetails.sort((a, b) => b.timestamp - a.timestamp);
 
     return filteredTransactionDetails;
   }

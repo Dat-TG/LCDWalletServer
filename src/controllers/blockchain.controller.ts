@@ -2,6 +2,7 @@ import { Request, Response } from "express"; // Assuming you're using Express.js
 import Block from "../models/blockchain/block";
 import TransactionPool from "../models/transaction/TransactionPool";
 import blockchain from "../instances/blockchainInstance";
+import { getPublicKeyFromPrivateKey } from "../utils/helper";
 
 const transactionPool = new TransactionPool();
 
@@ -70,9 +71,9 @@ export const mineBlock = async (req: Request, res: Response) => {
       #swagger.method = 'post'
       #swagger.summary = 'Mine a new block'
       #swagger.description = 'Creates and adds a new block to the blockchain if the validator is authorized.'
-      #swagger.parameters['validatorAddress'] = {
+      #swagger.parameters['privateKey'] = {
         in: 'query',
-        description: 'Public key of the validator',
+        description: 'Private key of the validator',
         required: true,
         type: 'string'
       }
@@ -90,14 +91,14 @@ export const mineBlock = async (req: Request, res: Response) => {
       }
   */
   try {
-    const { validatorAddress } = req.query;
+    const { privateKey } = req.query;
 
-    if (!validatorAddress || typeof validatorAddress !== "string") {
+    if (!privateKey || typeof privateKey !== "string") {
       return res.status(400).json({ error: "Invalid validator address" });
     }
 
     // Validate the validator
-    if (blockchain.selectValidator() !== validatorAddress) {
+    if (blockchain.selectValidator() !== privateKey) {
       return res.status(400).json({ error: "Not authorized to mine" });
     }
 
@@ -112,7 +113,7 @@ export const mineBlock = async (req: Request, res: Response) => {
       previousHash: blockchain.chain[blockchain.chain.length - 1].hash,
       timestamp: Date.now(),
       transactions: validTransactions,
-      validator: validatorAddress as string, // Ensure the validatorAddress is a string
+      validator: getPublicKeyFromPrivateKey(privateKey), // Ensure the validatorAddress is a string
       signature: "", // You might want to generate or receive a signature here
     });
 
@@ -231,9 +232,9 @@ export const registerValidator = (req: Request, res: Response) => {
           "application/json": {
             schema: {
               type: 'object',
-              required: ['publicKey', 'stake'],
+              required: ['privateKey', 'stake'],
               properties: {
-                publicKey: { type: 'string' },
+                privateKey: { type: 'string' },
                 stake: { type: 'number' }
               }
             }
@@ -253,13 +254,13 @@ export const registerValidator = (req: Request, res: Response) => {
       }
   */
   try {
-    const { publicKey, stake } = req.body;
+    const { privateKey, stake } = req.body;
 
-    if (!publicKey || typeof publicKey !== "string" || isNaN(stake)) {
+    if (!privateKey || typeof privateKey !== "string" || isNaN(stake)) {
       return res.status(400).json({ error: "Invalid public key or stake" });
     }
 
-    blockchain.registerValidator(publicKey, stake);
+    blockchain.registerValidator(privateKey, stake);
 
     if (stake > 0) {
       res
@@ -281,35 +282,41 @@ export const registerValidator = (req: Request, res: Response) => {
 
 // Check if a validator is registered
 export const isValidatorRegistered = (req: Request, res: Response) => {
-  /*
-      #swagger.auto = false
-      #swagger.tags = ['Validators']
-      #swagger.path = '/blocks/registered/{publicKey}'
-      #swagger.method = 'get'
-      #swagger.summary = 'Check if a validator is registered'
-      #swagger.description = 'Verifies if a validator is registered with the blockchain.'
-      #swagger.parameters['publicKey'] = {
-        in: 'path',
-        description: 'Public key of the validator to check.',
-        required: true,
-        type: 'string'
-      }
-      #swagger.responses[200] = {
-        description: 'Stake of validator if registered else 0',
-        schema: { type: 'number' }
-      }
-      #swagger.responses[404] = {
-        description: 'Validator is not registered.'
-      }
-  */
+  // check validator by provide privateKey and publicKey
+  /* 
+        #swagger.auto = false
+        #swagger.tags = ['Validators']
+        #swagger.path = '/blocks/registered/{privateKey}/{publicKey}'
+        #swagger.method = 'get'
+        #swagger.summary = 'Check if a validator is registered'
+        #swagger.description = 'Checks if a validator is registered with the blockchain.'
+        #swagger.parameters['privateKey'] = {
+            in: 'path',
+            description: 'Private key of the validator.',
+            required: true,
+            type: 'string'
+        }
+        #swagger.responses[200] = {
+            description: 'Validator registration status.',
+            schema: { type: 'boolean' }
+        }
+        #swagger.responses[400] = {
+            description: 'Bad Request',
+            schema: { type: 'string', example: 'Invalid public key' }
+        }
+        #swagger.responses[500] = {
+            description: 'Internal Server Error',
+            schema: { type: 'string', example: 'An error occurred while checking the validator' }
+        }
+    */
   try {
-    const { publicKey } = req.params;
+    const { privateKey } = req.params;
 
-    if (!publicKey || typeof publicKey !== "string") {
+    if (!privateKey || typeof privateKey !== "string") {
       return res.status(400).json({ error: "Invalid public key" });
     }
 
-    const stake = blockchain.isValidatorRegistered(publicKey);
+    const stake = blockchain.isValidatorRegistered(privateKey);
 
     res.status(200).json({ stake: stake });
   } catch (error) {

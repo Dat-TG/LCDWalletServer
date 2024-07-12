@@ -17,6 +17,6 @@ router.get("/all", getAllBlocks);
 router.get("/index/:index", getBlockByIndex);
 router.get("/hash/:hash", getBlockByHash);
 router.post("/register", registerValidator);
-router.get("/registered/:publicKey", isValidatorRegistered);
+router.get("/registered/:privateKey", isValidatorRegistered);
 
 export default router;
