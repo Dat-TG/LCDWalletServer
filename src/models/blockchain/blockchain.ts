@@ -192,15 +192,20 @@ class Blockchain {
   }
 
   updateUnspentTxOutsWhenMakingTransaction(transaction: Transaction): void {
+    console.log("Updating unspent transaction outputs", transaction);
+
+    // Initialize arrays to hold new and consumed unspent transaction outputs
     const newUnspentTxOuts: UnspentTxOut[] = [];
     const consumedTxOuts: { txOutId: string; txOutIndex: number }[] = [];
 
+    // Add new unspent transaction outputs from the transaction's outputs
     transaction.txOuts.forEach((txOut: TxOut, index: number) => {
       newUnspentTxOuts.push(
         new UnspentTxOut(transaction.id, index, txOut.address, txOut.amount)
       );
     });
 
+    // Track consumed transaction outputs from the transaction's inputs
     transaction.txIns.forEach((txIn: TxIn) => {
       consumedTxOuts.push({
         txOutId: txIn.txOutId,
@@ -208,22 +213,34 @@ class Blockchain {
       });
     });
 
-    this.unspentTxOuts = this.unspentTxOuts
+    // Filter out consumed transaction outputs from the existing unspent transaction outputs
+    const updatedUnspentTxOuts = this.unspentTxOuts
       .filter(
         (uTxO: UnspentTxOut) =>
           !consumedTxOuts.find(
             (cTxO) =>
               cTxO.txOutId === uTxO.txOutId &&
-              cTxO.txOutIndex === cTxO.txOutIndex
+              cTxO.txOutIndex === uTxO.txOutIndex
           )
       )
       .concat(newUnspentTxOuts);
+
+    this.unspentTxOuts = updatedUnspentTxOuts;
+
+    console.log("Unspent transaction outputs updated", this.unspentTxOuts);
   }
 
   getBalance(address: string): number {
-    return this.unspentTxOuts
+    console.log("Getting balance of address", address);
+    console.log(
+      "Unspent transaction outputs before calculation",
+      this.unspentTxOuts
+    );
+    const balance = this.unspentTxOuts
       .filter((uTxO) => uTxO.address === address)
       .reduce((sum, uTxO) => sum + uTxO.amount, 0);
+    console.log("Balance of address", address, "is", balance);
+    return balance;
   }
 
   getTransactionById(transactionId: string): Transaction | null {
@@ -248,6 +265,7 @@ class Blockchain {
       this.transactionPool.addTransaction(transaction);
       return true;
     }
+    console.error("Invalid transaction");
     return false;
   }
 
@@ -255,6 +273,10 @@ class Blockchain {
     // 1. Check if transaction is already in the blockchain (prevents double-spending)
     for (const block of this.chain) {
       if (block.transactions.some((tx) => tx.id === transaction.id)) {
+        console.error(
+          "Transaction is already in the blockchain",
+          transaction.id
+        );
         return false;
       }
     }
@@ -267,12 +289,14 @@ class Blockchain {
             uTxO.txOutId === txIn.txOutId && uTxO.txOutIndex === txIn.txOutIndex
         )
       ) {
+        console.error("Transaction input is invalid or already spent");
         return false;
       }
     }
 
     // 3. Verify transaction signature for each input
     if (!transaction.txIns.every((txIn) => txIn.signature)) {
+      console.error("Transaction signature is missing");
       return false;
     }
 
@@ -293,11 +317,14 @@ class Blockchain {
     );
 
     if (totalInput < totalOutput) {
+      console.error("Total input amount is less than total output amount");
       return false;
     }
 
     // 5. Additional checks (e.g., no duplicate outputs, minimum output amount)
     // ... (Add your specific blockchain rules here)
+
+    console.log("Transaction is valid");
 
     return true;
   }

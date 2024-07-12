@@ -3,8 +3,9 @@ import Blockchain from "../models/blockchain/blockchain";
 import Transaction from "../models/transaction/Transaction";
 import TxIn from "../models/transaction/TxIn";
 import TxOut from "../models/transaction/TxOut";
-
-const blockchain = new Blockchain();
+import { ec as EC } from "elliptic";
+import blockchain from "../instances/blockchainInstance";
+const ec = new EC("secp256k1");
 
 export const sendTransaction = (req: Request, res: Response) => {
   /*
@@ -51,6 +52,25 @@ export const sendTransaction = (req: Request, res: Response) => {
         .json({ error: "Missing required transaction details" });
     }
 
+    // Validate private key
+    if (!privateKey || typeof privateKey !== "string") {
+      return res.status(400).json({ error: "Invalid private key" });
+    }
+
+    // Create a new elliptic curve key pair from the private key
+    const ec = new EC("secp256k1");
+    const keyPair = ec.keyFromPrivate(privateKey);
+
+    // Get the public key in hexadecimal format
+    const publicKey = keyPair.getPublic("hex");
+
+    // Validate the fromAddress
+    if (fromAddress !== publicKey) {
+      return res
+        .status(400)
+        .json({ error: "Invalid from address or privateKey" });
+    }
+
     // Create the inputs for the transaction
     const unspentTxOuts = blockchain.getUnspentTxOuts(fromAddress);
     let accumulatedAmount = 0;
@@ -82,13 +102,10 @@ export const sendTransaction = (req: Request, res: Response) => {
 
     const transaction = new Transaction({ txIns, txOuts });
 
+    console.log("transaction", transaction.txIns, transaction.txOuts);
+
     // Sign the transaction
     transaction.signTransaction(privateKey);
-
-    // Validate the transaction
-    if (!Transaction.validateStructure(transaction)) {
-      return res.status(400).json({ error: "Invalid transaction structure" });
-    }
 
     // Add the transaction to the pool
     blockchain.addTransaction(transaction);

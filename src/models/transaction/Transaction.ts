@@ -12,13 +12,19 @@ class Transaction {
   txOuts: TxOut[];
 
   constructor({ txIns, txOuts }: { txIns: TxIn[]; txOuts: TxOut[] }) {
-    this.id = this.generateId();
     this.txIns = txIns;
     this.txOuts = txOuts;
+    this.id = this.generateId();
   }
 
   private generateId(): string {
-    const data = JSON.stringify(this);
+    const txInsData = this.txIns
+      ?.map((txIn) => `${txIn.txOutId}-${txIn.txOutIndex}`)
+      .join("-");
+    const txOutsData = this.txOuts
+      ?.map((txOut) => `${txOut.address}-${txOut.amount}`)
+      .join("-");
+    const data = `${txInsData}-${txOutsData}`;
     return crypto.createHash("sha256").update(data).digest("hex");
   }
 
