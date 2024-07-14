@@ -86,6 +86,7 @@ export const sendTransaction = (req: Request, res: Response) => {
           signature: "",
         })
       );
+      console.log("accumulatedAmount", accumulatedAmount, amount);
       if (accumulatedAmount >= amount) break;
     }
 

@@ -359,7 +359,6 @@ class Blockchain {
         },
       ],
     });
-    rewardTransaction.id = rewardTransaction.calculateHash(); // Calculate ID for the reward transaction
     return rewardTransaction;
   }
 

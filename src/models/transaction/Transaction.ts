@@ -26,7 +26,7 @@ class Transaction {
     const txOutsData = this.txOuts
       ?.map((txOut) => `${txOut.address}-${txOut.amount}`)
       .join("-");
-    const data = `${txInsData}-${txOutsData}`;
+    const data = `${txInsData}-${txOutsData}-${new Date().getTime()}`;
     return crypto.createHash("sha256").update(data).digest("hex");
   }
 
@@ -40,7 +40,10 @@ class Transaction {
   signTransaction(privateKey: string): void {
     const key = ec.keyFromPrivate(privateKey);
     const signature = key.sign(this.calculateHash(), "base64");
-    this.txIns[0].signature = signature.toDER("hex");
+    const signature_hex = signature.toDER("hex");
+    this.txIns.forEach((txIn) => {
+      txIn.signature = signature_hex;
+    });
   }
 
   static validateStructure(transaction: Transaction): boolean {
