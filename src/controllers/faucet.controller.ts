@@ -4,6 +4,10 @@ import Transaction from "../models/transaction/Transaction";
 import TxIn from "../models/transaction/TxIn";
 import blockchain from "../instances/blockchainInstance";
 import Block from "../models/blockchain/block";
+import {
+  broadcastBalanceUpdate,
+  broadcastTransactionHistory,
+} from "../websocket";
 
 const requestHistory: Map<string, number> = new Map(); // Map to store last request time for each address
 
@@ -82,6 +86,13 @@ export const requestInitialFunds = (req: Request, res: Response) => {
     });
 
     blockchain.addBlock(block);
+
+    broadcastBalanceUpdate(address, blockchain.getBalance(address));
+
+    broadcastTransactionHistory(
+      address,
+      blockchain.getTransactionHistory(address)
+    );
 
     // Update last request time for the address
     requestHistory.set(address, Date.now());

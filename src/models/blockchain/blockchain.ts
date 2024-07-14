@@ -1,6 +1,10 @@
 import { TransactionDetails } from "../../types/transactionDetails";
 import { getPublicKeyFromPrivateKey } from "../../utils/helper";
-import { broadcastBalanceUpdate, broadcastNewBlock } from "../../websocket";
+import {
+  broadcastBalanceUpdate,
+  broadcastNewBlock,
+  broadcastTransactionHistory,
+} from "../../websocket";
 import Transaction from "../transaction/Transaction";
 import TransactionPool from "../transaction/TransactionPool";
 import TxIn from "../transaction/TxIn";
@@ -236,6 +240,15 @@ class Blockchain {
       this.isValidTransaction(transaction)
     ) {
       this.transactionPool.addTransaction(transaction);
+      const unique_address_list = [
+        ...new Set(transaction.txOuts.map((txOut) => txOut.address)),
+      ];
+      unique_address_list.forEach((address) => {
+        broadcastTransactionHistory(
+          address,
+          this.getTransactionHistory(address)
+        );
+      });
       return true;
     }
     console.error("Invalid transaction");
@@ -384,10 +397,17 @@ class Blockchain {
       this.transactionPool.transactions = []; // Clear transaction pool after mining a block
       broadcastNewBlock(newBlock);
       // broadcast balance update for address in transactions array
-      transactions.forEach((transaction) => {
-        transaction.txOuts.forEach((txOut) => {
-          broadcastBalanceUpdate(txOut.address, this.getBalance(txOut.address));
-        });
+      const unique_address_list = [
+        ...new Set(
+          transactions.flatMap((tx) => tx.txOuts.map((txOut) => txOut.address))
+        ),
+      ];
+      unique_address_list.forEach((address) => {
+        broadcastBalanceUpdate(address, this.getBalance(address));
+        broadcastTransactionHistory(
+          address,
+          this.getTransactionHistory(address)
+        );
       });
       return newBlock;
     } else {

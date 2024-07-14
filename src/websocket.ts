@@ -1,7 +1,7 @@
 import WebSocket, { Server as WebSocketServer } from "ws";
 import http from "http";
 import Block from "./models/blockchain/block";
-import Transaction from "./models/transaction/Transaction";
+import { TransactionDetails } from "./types/transactionDetails";
 
 const sockets: WebSocket[] = [];
 
@@ -35,8 +35,11 @@ export const broadcastNewBlock = (block: Block) => {
   broadcast({ type: "NEW_BLOCK", block });
 };
 
-export const broadcastNewTransaction = (transaction: Transaction) => {
-  broadcast({ type: "NEW_TRANSACTION", transaction });
+export const broadcastTransactionHistory = (
+  address: string,
+  transactions: TransactionDetails[]
+) => {
+  broadcast({ type: "TRANSACTION_HISTORY", address, transactions });
 };
 
 export const broadcastBalanceUpdate = (address: string, balance: number) => {
