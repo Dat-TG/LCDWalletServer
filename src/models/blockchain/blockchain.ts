@@ -1,6 +1,6 @@
 import { TransactionDetails } from "../../types/transactionDetails";
 import { getPublicKeyFromPrivateKey } from "../../utils/helper";
-import { broadcastNewBlock } from "../../websocket";
+import { broadcastBalanceUpdate, broadcastNewBlock } from "../../websocket";
 import Transaction from "../transaction/Transaction";
 import TransactionPool from "../transaction/TransactionPool";
 import TxIn from "../transaction/TxIn";
@@ -383,6 +383,12 @@ class Blockchain {
     if (this.addBlock(newBlock)) {
       this.transactionPool.transactions = []; // Clear transaction pool after mining a block
       broadcastNewBlock(newBlock);
+      // broadcast balance update for address in transactions array
+      transactions.forEach((transaction) => {
+        transaction.txOuts.forEach((txOut) => {
+          broadcastBalanceUpdate(txOut.address, this.getBalance(txOut.address));
+        });
+      });
       return newBlock;
     } else {
       throw new Error("Failed to add block to the chain");
