@@ -21,7 +21,10 @@ export const getLatestBlocks = (req: Request, res: Response) => {
       }
 */
   try {
-    const latestBlocks = blockchain.chain.slice(-5); // Get the last 5 blocks
+    // Get the latest 5 blocks sorted by index in descending order
+    const latestBlocks = blockchain.chain
+      .slice(-5)
+      .sort((a, b) => b.index - a.index);
     res.json(latestBlocks);
   } catch (error) {
     if (error instanceof Error) {
