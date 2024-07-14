@@ -13,12 +13,14 @@ class Blockchain {
   chain: Block[];
   transactionPool: TransactionPool;
   unspentTxOuts: UnspentTxOut[];
+  allTxOuts: UnspentTxOut[];
   validators: Map<string, number>; // Map of public key to stake
 
   constructor() {
     this.chain = [this.createGenesisBlock()];
     this.transactionPool = new TransactionPool();
     this.unspentTxOuts = this.createGenesisUnspentTxOuts();
+    this.allTxOuts = this.createGenesisUnspentTxOuts();
     this.validators = new Map<string, number>([]);
   }
 
@@ -165,17 +167,19 @@ class Blockchain {
     this.unspentTxOuts = this.getUnspentTxOutsFromChain(newChain);
   }
 
-  updateUnspentTxOuts(block: Block): void {
+  // Update UTXOs based on new transactions
+  private updateUnspentTxOuts(block: Block): void {
     const newUnspentTxOuts: UnspentTxOut[] = [];
     const consumedTxOuts: { txOutId: string; txOutIndex: number }[] = [];
 
-    block.transactions.forEach((tx: Transaction) => {
-      tx.txOuts.forEach((txOut: TxOut, index: number) => {
+    block.transactions.forEach((transaction) => {
+      transaction.txOuts.forEach((txOut: TxOut, index: number) => {
         newUnspentTxOuts.push(
-          new UnspentTxOut(tx.id, index, txOut.address, txOut.amount)
+          new UnspentTxOut(transaction.id, index, txOut.address, txOut.amount)
         );
       });
-      tx.txIns.forEach((txIn: TxIn) => {
+
+      transaction.txIns.forEach((txIn: TxIn) => {
         consumedTxOuts.push({
           txOutId: txIn.txOutId,
           txOutIndex: txIn.txOutIndex,
@@ -183,7 +187,9 @@ class Blockchain {
       });
     });
 
-    this.unspentTxOuts = this.unspentTxOuts
+    this.allTxOuts = this.allTxOuts.concat(newUnspentTxOuts);
+
+    const updatedUnspentTxOuts = this.unspentTxOuts
       .filter(
         (uTxO: UnspentTxOut) =>
           !consumedTxOuts.find(
@@ -193,6 +199,9 @@ class Blockchain {
           )
       )
       .concat(newUnspentTxOuts);
+
+    this.unspentTxOuts = updatedUnspentTxOuts;
+    console.log("Unspent transaction outputs after update", this.unspentTxOuts);
   }
 
   getBalance(address: string): number {
@@ -323,11 +332,15 @@ class Blockchain {
   // Function to create a reward transaction for the validator
   createRewardTransaction(validator: string): Transaction {
     const rewardAmount = 50; // Example reward amount
+    console.log(
+      "Creating reward transaction for validator",
+      getPublicKeyFromPrivateKey(validator)
+    );
     const rewardTransaction = new Transaction({
       txIns: [],
       txOuts: [
         {
-          address: validator,
+          address: getPublicKeyFromPrivateKey(validator),
           amount: rewardAmount,
         },
       ],
@@ -346,9 +359,7 @@ class Blockchain {
 
   mineBlock(): Block {
     const validator = this.selectValidator();
-    const rewardTransaction = this.createRewardTransaction(
-      getPublicKeyFromPrivateKey(validator)
-    );
+    const rewardTransaction = this.createRewardTransaction(validator);
     const transactions = [
       ...this.transactionPool.transactions,
       rewardTransaction,
@@ -382,15 +393,19 @@ class Blockchain {
 
   // Helper function to find the sender address of a transaction
   private findSenderAddress(txIns: TxIn[]): string | undefined {
+    console.log("Finding sender address for transaction inputs:", txIns);
     for (const txIn of txIns) {
-      const referencedTxOut = this.unspentTxOuts.find(
+      console.log("Checking UTXOs for txIn:", txIn);
+      const referencedTxOut = this.allTxOuts.find(
         (uTxO) =>
           uTxO.txOutId === txIn.txOutId && uTxO.txOutIndex === txIn.txOutIndex
       );
       if (referencedTxOut) {
+        console.log("Found referenced UTXO:", referencedTxOut);
         return referencedTxOut.address;
       }
     }
+    console.log("No referenced UTXO found for txIns:", txIns);
     return undefined;
   }
 
@@ -419,9 +434,18 @@ class Blockchain {
       status: string
     ) => {
       const fromAddress = this.findSenderAddress(transaction.txIns);
+      console.log("From address:", fromAddress);
       transaction.txOuts.forEach((txOut) => {
-        // Ensure we are considering only outgoing transactions where the address is the recipient
-        if (txOut.address === address || fromAddress === address) {
+        if (txOut.address === address) {
+          transactionDetails.push({
+            status,
+            id: transaction.id,
+            fromAddress: fromAddress || "LCD Faucet",
+            toAddress: txOut.address,
+            amount: txOut.amount,
+            timestamp: transaction.timestamp,
+          });
+        } else if (fromAddress === address) {
           transactionDetails.push({
             status,
             id: transaction.id,

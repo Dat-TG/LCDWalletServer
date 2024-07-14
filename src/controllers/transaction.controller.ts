@@ -114,10 +114,13 @@ export const sendTransaction = (req: Request, res: Response) => {
     blockchain.mineBlock();
 
     res.status(200).json(transaction);
-  } catch (error) {
-    res
-      .status(500)
-      .json({ error: "An error occurred while sending the transaction" });
+  } catch (error: any) {
+    console.log(error);
+    res.status(500).json({
+      error: `An error occurred while sending the transaction: ${
+        error.message || error
+      }`,
+    });
   }
 };
 
