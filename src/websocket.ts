@@ -1,5 +1,7 @@
 import WebSocket, { Server as WebSocketServer } from "ws";
 import http from "http";
+import Block from "./models/blockchain/block";
+import Transaction from "./models/transaction/Transaction";
 
 const sockets: WebSocket[] = [];
 
@@ -29,7 +31,14 @@ export const broadcast = (message: any) => {
   });
 };
 
-// Example function to broadcast new blocks
-export const broadcastNewBlock = (block: any) => {
+export const broadcastNewBlock = (block: Block) => {
   broadcast({ type: "NEW_BLOCK", block });
+};
+
+export const broadcastNewTransaction = (transaction: Transaction) => {
+  broadcast({ type: "NEW_TRANSACTION", transaction });
+};
+
+export const broadcastBalanceUpdate = (address: string, balance: number) => {
+  broadcast({ type: "BALANCE_UPDATE", address, balance });
 };

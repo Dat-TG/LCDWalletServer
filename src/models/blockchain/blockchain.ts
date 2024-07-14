@@ -1,5 +1,6 @@
 import { TransactionDetails } from "../../types/transactionDetails";
 import { getPublicKeyFromPrivateKey } from "../../utils/helper";
+import { broadcastNewBlock } from "../../websocket";
 import Transaction from "../transaction/Transaction";
 import TransactionPool from "../transaction/TransactionPool";
 import TxIn from "../transaction/TxIn";
@@ -14,7 +15,7 @@ class Blockchain {
   transactionPool: TransactionPool;
   unspentTxOuts: UnspentTxOut[];
   allTxOuts: UnspentTxOut[];
-  validators: Map<string, number>; // Map of public key to stake
+  validators: Map<string, number>; // Map of private key to stake
 
   constructor() {
     this.chain = [this.createGenesisBlock()];
@@ -381,6 +382,7 @@ class Blockchain {
     }, 5000);
     if (this.addBlock(newBlock)) {
       this.transactionPool.transactions = []; // Clear transaction pool after mining a block
+      broadcastNewBlock(newBlock);
       return newBlock;
     } else {
       throw new Error("Failed to add block to the chain");
