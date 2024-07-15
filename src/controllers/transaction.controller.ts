@@ -53,6 +53,10 @@ export const sendTransaction = (req: Request, res: Response) => {
         .json({ error: "Missing required transaction details" });
     }
 
+    if (fromAddress === toAddress) {
+      return res.status(400).json({ error: "Cannot send funds to yourself" });
+    }
+
     // Validate private key
     if (!privateKey || typeof privateKey !== "string") {
       return res.status(400).json({ error: "Invalid private key" });

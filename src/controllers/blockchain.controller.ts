@@ -444,3 +444,50 @@ export const isValidatorRegistered = (req: Request, res: Response) => {
       .json({ error: "An error occurred while checking the validator" });
   }
 };
+
+// Get mining statistics of a validator by address
+export const getMiningStatistics = (req: Request, res: Response) => {
+  /*
+      #swagger.auto = false
+      #swagger.tags = ['Validators']
+      #swagger.path = '/blocks/mining-stats/{address}'
+      #swagger.method = 'get'
+      #swagger.summary = 'Get mining statistics'
+      #swagger.description = 'Returns the mining statistics of a validator by address.'
+      #swagger.parameters['address'] = {
+          in: 'path',
+          description: 'Address of the validator.',
+          required: true,
+          type: 'string'
+      }
+      #swagger.responses[200] = {
+          description: 'Mining statistics of the validator.',
+          schema: { $ref: '#/definitions/MiningStatistics' }
+      }
+      #swagger.responses[400] = {
+          description: 'Bad Request',
+          schema: { type: 'string', example: 'Invalid address' }
+      }
+      #swagger.responses[500] = {
+          description: 'Internal Server Error',
+          schema: { type: 'string', example: 'An error occurred while fetching the mining statistics' }
+      }
+  */
+  try {
+    const { address } = req.params;
+
+    if (!address || typeof address !== "string") {
+      return res.status(400).json({ error: "Invalid address" });
+    }
+
+    const miningStatistics = blockchain.getMiningStatistics(address);
+
+    res.status(200).json(miningStatistics);
+  } catch (error) {
+    res
+      .status(500)
+      .json({
+        error: "An error occurred while fetching the mining statistics",
+      });
+  }
+};

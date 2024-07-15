@@ -4,6 +4,7 @@ import {
   getBlockByHash,
   getBlockByIndex,
   getLatestBlocks,
+  getMiningStatistics,
   isValidatorRegistered,
   mineBlock,
   registerValidator,
@@ -18,5 +19,6 @@ router.get("/index/:index", getBlockByIndex);
 router.get("/hash/:hash", getBlockByHash);
 router.post("/register", registerValidator);
 router.get("/registered/:privateKey", isValidatorRegistered);
+router.get("/mining-stats/:address", getMiningStatistics);
 
 export default router;

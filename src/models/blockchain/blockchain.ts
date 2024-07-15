@@ -1,3 +1,4 @@
+import { rewardAmount } from "../../constants";
 import { TransactionDetails } from "../../types/transactionDetails";
 import { getPublicKeyFromPrivateKey } from "../../utils/helper";
 import {
@@ -344,7 +345,10 @@ class Blockchain {
   }
 
   // Function to create a reward transaction for the validator
-  createRewardTransaction(validator: string, rewardAmount = 50): Transaction {
+  createRewardTransaction(
+    validator: string,
+    amount = rewardAmount
+  ): Transaction {
     console.log(
       "Creating reward transaction for validator",
       getPublicKeyFromPrivateKey(validator)
@@ -354,7 +358,7 @@ class Blockchain {
       txOuts: [
         {
           address: getPublicKeyFromPrivateKey(validator),
-          amount: rewardAmount,
+          amount: amount,
         },
       ],
     });
@@ -512,6 +516,17 @@ class Blockchain {
     filteredTransactionDetails.sort((a, b) => b.timestamp - a.timestamp);
 
     return filteredTransactionDetails;
+  }
+
+  getMiningStatistics(validatorAddress: string) {
+    const minedBlocks = this.chain.filter(
+      (block) => block.validator === validatorAddress
+    );
+    const rewards = minedBlocks.length * rewardAmount;
+    return {
+      minedBlocks: minedBlocks.length,
+      rewards: rewards,
+    };
   }
 }
 
