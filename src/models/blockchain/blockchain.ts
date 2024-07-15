@@ -344,8 +344,7 @@ class Blockchain {
   }
 
   // Function to create a reward transaction for the validator
-  createRewardTransaction(validator: string): Transaction {
-    const rewardAmount = 50; // Example reward amount
+  createRewardTransaction(validator: string, rewardAmount = 50): Transaction {
     console.log(
       "Creating reward transaction for validator",
       getPublicKeyFromPrivateKey(validator)
@@ -467,7 +466,7 @@ class Blockchain {
           transactionDetails.push({
             status,
             id: transaction.id,
-            fromAddress: fromAddress || "LCD Faucet",
+            fromAddress: fromAddress || "LCD Wallet",
             toAddress: txOut.address,
             amount: txOut.amount,
             timestamp: transaction.timestamp,

@@ -3,6 +3,14 @@ import Block from "../models/blockchain/block";
 import TransactionPool from "../models/transaction/TransactionPool";
 import blockchain from "../instances/blockchainInstance";
 import { getPublicKeyFromPrivateKey } from "../utils/helper";
+import TxIn from "../models/transaction/TxIn";
+import TxOut from "../models/transaction/TxOut";
+import Transaction from "../models/transaction/Transaction";
+import {
+  broadcastBalanceUpdate,
+  broadcastNewBlock,
+  broadcastTransactionHistory,
+} from "../websocket";
 
 const transactionPool = new TransactionPool();
 
@@ -259,20 +267,128 @@ export const registerValidator = (req: Request, res: Response) => {
   try {
     const { privateKey, stake } = req.body;
 
-    if (!privateKey || typeof privateKey !== "string" || isNaN(stake)) {
+    if (
+      !privateKey ||
+      typeof privateKey !== "string" ||
+      isNaN(stake) ||
+      stake < 0
+    ) {
       return res.status(400).json({ error: "Invalid public key or stake" });
     }
 
-    blockchain.registerValidator(privateKey, stake);
+    const currentStake = blockchain.isValidatorRegistered(privateKey);
+    const diff = stake - currentStake;
+    const address = getPublicKeyFromPrivateKey(privateKey);
 
-    if (stake > 0) {
+    if (diff === 0) {
+      return res.status(200).json({ message: "Validator stake unchanged" });
+    }
+
+    if (diff < 0) {
+      const refundTransaction = blockchain.createRewardTransaction(
+        privateKey,
+        -diff
+      );
+      const newBlock = new Block({
+        index: blockchain.chain.length,
+        previousHash: blockchain.getLatestBlock().hash,
+        timestamp: Date.now(),
+        transactions: [refundTransaction],
+        validator: "LCD Wallet",
+        signature: "", // Add logic to create a signature
+      });
+
+      newBlock.hash = newBlock.calculateHash();
+      newBlock.signature = `Refund${Date.now().toString()}`; // Sign the block
+      if (blockchain.addBlock(newBlock)) {
+        broadcastNewBlock(newBlock);
+        broadcastBalanceUpdate(address, blockchain.getBalance(address));
+        broadcastTransactionHistory(
+          address,
+          blockchain.getTransactionHistory(address)
+        );
+        blockchain.registerValidator(privateKey, stake);
+      }
+      return res.status(200).json({
+        message:
+          currentStake == 0
+            ? "Validator registered successfully"
+            : "Validator stake updated successfully",
+        stake,
+      });
+    }
+
+    const balance = blockchain.getBalance(address);
+    if (balance < diff) {
+      return res.status(400).json({ error: "Insufficient balance" });
+    }
+
+    // Create a transaction for the stake
+    // Create the inputs for the transaction
+    const unspentTxOuts = blockchain.getUnspentTxOuts(address);
+    let accumulatedAmount = 0;
+    const txIns: TxIn[] = [];
+
+    for (const uTxO of unspentTxOuts) {
+      accumulatedAmount += uTxO.amount;
+      txIns.push(
+        new TxIn({
+          txOutId: uTxO.txOutId,
+          txOutIndex: uTxO.txOutIndex,
+          signature: "",
+        })
+      );
+      if (accumulatedAmount >= diff) break;
+    }
+
+    if (accumulatedAmount < diff) {
+      return res.status(400).json({ error: "Insufficient balance" });
+    }
+
+    // Create the outputs for the transaction
+    const txOuts: TxOut[] = [
+      new TxOut({ address: "LCD Wallet", amount: diff }),
+    ];
+    if (accumulatedAmount > diff) {
+      txOuts.push(
+        new TxOut({ address: address, amount: accumulatedAmount - diff })
+      );
+    }
+
+    const transaction = new Transaction({ txIns, txOuts });
+
+    // Sign the transaction
+    transaction.signTransaction(privateKey);
+
+    const newBlock1 = new Block({
+      index: blockchain.chain.length,
+      previousHash: blockchain.getLatestBlock().hash,
+      timestamp: Date.now(),
+      transactions: [transaction],
+      validator: "LCD Wallet",
+      signature: "", // Add logic to create a signature
+    });
+
+    newBlock1.hash = newBlock1.calculateHash();
+    newBlock1.signature = blockchain.signBlock(newBlock1, privateKey); // Sign the block
+    if (blockchain.addBlock(newBlock1)) {
+      broadcastNewBlock(newBlock1);
+      broadcastBalanceUpdate(address, blockchain.getBalance(address));
+      broadcastTransactionHistory(
+        address,
+        blockchain.getTransactionHistory(address)
+      );
+      blockchain.registerValidator(privateKey, stake);
+    }
+
+    if (currentStake == 0) {
       res
         .status(200)
-        .json({ message: "Validator registered successfully", stake });
+        .json({ message: "Validator register successfully", stake });
     } else {
       res
         .status(200)
-        .json({ message: "Validator unregistered successfully", stake });
+        .json({ message: "Validator stake updated successfully", stake });
     }
   } catch (error) {
     if (error instanceof Error) {
