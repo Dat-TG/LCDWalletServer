@@ -369,7 +369,7 @@ class Blockchain {
     return signature.toDER("hex");
   }
 
-  mineBlock(): Block {
+  mineBlock() {
     const validator = this.selectValidator();
     const rewardTransaction = this.createRewardTransaction(validator);
     const transactions = [
@@ -388,29 +388,30 @@ class Blockchain {
     newBlock.hash = newBlock.calculateHash();
     newBlock.signature = this.signBlock(newBlock, validator); // Sign the block
     // Simulate delay in mining
+    console.log("Block mined:", newBlock);
     setTimeout(() => {
-      console.log("Block mined:", newBlock);
+      if (this.addBlock(newBlock)) {
+        this.transactionPool.transactions = []; // Clear transaction pool after mining a block
+        broadcastNewBlock(newBlock);
+        // broadcast balance update for address in transactions array
+        const unique_address_list = [
+          ...new Set(
+            transactions.flatMap((tx) =>
+              tx.txOuts.map((txOut) => txOut.address)
+            )
+          ),
+        ];
+        unique_address_list.forEach((address) => {
+          broadcastBalanceUpdate(address, this.getBalance(address));
+          broadcastTransactionHistory(
+            address,
+            this.getTransactionHistory(address)
+          );
+        });
+      } else {
+        throw new Error("Failed to add block to the chain");
+      }
     }, 5000);
-    if (this.addBlock(newBlock)) {
-      this.transactionPool.transactions = []; // Clear transaction pool after mining a block
-      broadcastNewBlock(newBlock);
-      // broadcast balance update for address in transactions array
-      const unique_address_list = [
-        ...new Set(
-          transactions.flatMap((tx) => tx.txOuts.map((txOut) => txOut.address))
-        ),
-      ];
-      unique_address_list.forEach((address) => {
-        broadcastBalanceUpdate(address, this.getBalance(address));
-        broadcastTransactionHistory(
-          address,
-          this.getTransactionHistory(address)
-        );
-      });
-      return newBlock;
-    } else {
-      throw new Error("Failed to add block to the chain");
-    }
   }
 
   getTransactionPool(): Transaction[] {
