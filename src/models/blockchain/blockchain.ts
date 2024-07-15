@@ -1,4 +1,4 @@
-import { rewardAmount } from "../../constants";
+import { genesisValidator, rewardAmount } from "../../constants";
 import { TransactionDetails } from "../../types/transactionDetails";
 import { getPublicKeyFromPrivateKey } from "../../utils/helper";
 import {
@@ -29,7 +29,9 @@ class Blockchain {
     this.transactionPool = new TransactionPool();
     this.unspentTxOuts = this.createGenesisUnspentTxOuts();
     this.allTxOuts = this.createGenesisUnspentTxOuts();
-    this.validators = new Map<string, number>([]);
+    this.validators = new Map<string, number>([
+      [genesisValidator, 100], // Assign an initial stake
+    ]);
   }
 
   createGenesisUnspentTxOuts(): UnspentTxOut[] {
@@ -47,8 +49,7 @@ class Blockchain {
 
   createGenesisBlock(): Block {
     const initialTxOut = new TxOut({
-      address:
-        "04ddf6c141bdeae4244494ceb4fc3076c77e57df0f28fe96ab9c030b7af78f8e860ea6850e5305dfa02cf7d57283988e696fc1bc1ea3c930245598935c5d030019", // Replace with the address of your initial wallet
+      address: getPublicKeyFromPrivateKey(genesisValidator), // Replace with the address of your initial wallet
       amount: 1000, // Assign an initial amount
     });
 
@@ -197,10 +198,15 @@ class Blockchain {
 
     this.allTxOuts = this.allTxOuts.concat(newUnspentTxOuts);
 
+    console.log(
+      "Unspent transaction outputs before update",
+      this.unspentTxOuts
+    );
+
     const updatedUnspentTxOuts = this.unspentTxOuts
       .filter(
         (uTxO: UnspentTxOut) =>
-          !consumedTxOuts.find(
+          !consumedTxOuts.some(
             (cTxO) =>
               cTxO.txOutId === uTxO.txOutId &&
               cTxO.txOutIndex === uTxO.txOutIndex
