@@ -3,8 +3,10 @@ import { TransactionDetails } from "../../types/transactionDetails";
 import { getPublicKeyFromPrivateKey } from "../../utils/helper";
 import {
   broadcastBalanceUpdate,
+  broadcastMiningStats,
   broadcastNewBlock,
   broadcastTransactionHistory,
+  broadcastTransactionPool,
 } from "../../websocket";
 import Transaction from "../transaction/Transaction";
 import TransactionPool from "../transaction/TransactionPool";
@@ -250,6 +252,7 @@ class Blockchain {
           this.getTransactionHistory(address)
         );
       });
+      broadcastTransactionPool(this.getTransactionPool());
       return true;
     }
     console.error("Invalid transaction");
@@ -380,12 +383,13 @@ class Blockchain {
       ...this.transactionPool.transactions,
       rewardTransaction,
     ];
+    const validatorAddress = getPublicKeyFromPrivateKey(validator);
     const newBlock = new Block({
       index: this.chain.length,
       previousHash: this.getLatestBlock().hash,
       timestamp: Date.now(),
       transactions: transactions,
-      validator: getPublicKeyFromPrivateKey(validator),
+      validator: validatorAddress,
       signature: "", // Add logic to create a signature
     });
 
@@ -397,6 +401,7 @@ class Blockchain {
       if (this.addBlock(newBlock)) {
         this.transactionPool.transactions = []; // Clear transaction pool after mining a block
         broadcastNewBlock(newBlock);
+        broadcastTransactionPool(this.getTransactionPool());
         // broadcast balance update for address in transactions array
         const unique_address_list = [
           ...new Set(
@@ -412,14 +417,37 @@ class Blockchain {
             this.getTransactionHistory(address)
           );
         });
+        broadcastMiningStats(
+          validatorAddress,
+          this.getMiningStatistics(validatorAddress)
+        );
       } else {
         throw new Error("Failed to add block to the chain");
       }
     }, 5000);
   }
 
-  getTransactionPool(): Transaction[] {
-    return this.transactionPool.transactions;
+  getTransactionPool(): TransactionDetails[] {
+    const transactionDetails: TransactionDetails[] = [];
+    for (const transaction of this.transactionPool.transactions) {
+      transaction.txOuts.forEach((txOut) => {
+        const fromAddress = this.findSenderAddress(transaction.txIns);
+        transactionDetails.push({
+          status: "pending",
+          id: transaction.id,
+          fromAddress: fromAddress || "LCD Wallet",
+          toAddress: txOut.address,
+          amount: txOut.amount,
+          timestamp: transaction.timestamp,
+        });
+      });
+    }
+    const filteredTransactionDetails = transactionDetails.filter(
+      (transaction) => {
+        return transaction.fromAddress !== transaction.toAddress;
+      }
+    );
+    return filteredTransactionDetails;
   }
 
   // Helper function to find the sender address of a transaction
@@ -480,7 +508,7 @@ class Blockchain {
           transactionDetails.push({
             status,
             id: transaction.id,
-            fromAddress: fromAddress || "LCD Faucet",
+            fromAddress: fromAddress || "LCD Wallet",
             toAddress: txOut.address,
             amount: txOut.amount,
             timestamp: transaction.timestamp,

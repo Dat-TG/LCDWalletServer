@@ -45,3 +45,19 @@ export const broadcastTransactionHistory = (
 export const broadcastBalanceUpdate = (address: string, balance: number) => {
   broadcast({ type: "BALANCE_UPDATE", address, balance });
 };
+
+export const broadcastTransactionPool = (
+  transactionPool: TransactionDetails[]
+) => {
+  broadcast({ type: "TRANSACTION_POOL", transactionPool });
+};
+
+export const broadcastMiningStats = (
+  address: string,
+  miningStats: {
+    minedBlocks: number;
+    rewards: number;
+  }
+) => {
+  broadcast({ type: "MINING_STATS", address, miningStats });
+};
